@@ -21,8 +21,8 @@
 */
 
 /*
- * Filename: hcropac.c
- * -------------------
+ * Filename: hcropaclib.c
+ * ----------------------
  * A first-order parametric binaural Ambisonic decoder for reproducing ambisonic
  * signals over headphones. The algorithm is based on the segregation of the
  * direct and diffuse streams using the Cross-Pattern Coherence (CroPaC) spatial
@@ -590,14 +590,10 @@ void hcropaclib_process
                 /* adjust balance */
                 for(i=0; i<NUM_EARS; i++){
                     for(j=0; j<NUM_EARS; j++){
-                        if (balance[band] > 1){
-                            Cdir[i][j] = crmulf(Cdir[i][j], balance[band]);
+                        if (balance[band] > 1)
                             Cdiff[i][j] = crmulf(Cdiff[i][j], 2.0f - balance[band]);
-                        }
-                        else{
+                        else
                             Cdir[i][j] = crmulf(Cdir[i][j], balance[band]);
-                            Cdiff[i][j] = crmulf(Cdiff[i][j], 2.0f - balance[band]);
-                        }
                     }
                 }
        
