@@ -20,28 +20,27 @@
  ==============================================================================
 */
 
-/*
- * Filename: hcropac_internal.h
- * ----------------------------
- * A first-order parametric binaural Ambisonic decoder for reproducing ambisonic
- * signals over headphones. The algorithm is based on the segregation of the
- * direct and diffuse streams using the Cross-Pattern Coherence (CroPaC) spatial
- * post-filter.
+/**
+ * @file hcropac_internal.h
+ * @brief A first-order parametric binaural Ambisonic decoder for reproducing
+ *        ambisonic signals over headphones.
+ *
+ * The algorithm is based on the segregation of the direct and diffuse streams
+ * using the Cross-Pattern Coherence (CroPaC) spatial post-filter.
+ *
  * The output of a linear binaural ambisonic decoder is then adaptively mixed,
  * in such a manner that the covariance matrix of the output stream is brought
  * closer to that of the target covariance matrix, derived from the
  * direct/diffuse analysis. For more information on the method, the reader is
  * directed to [1].
  *
- * Dependencies:
- *     Spatial_Audio_Framework
- * Author, date created:
- *     Leo McCormack, 12.01.2018
+ * @see [1] McCormack, L., Delikaris-Manias, S. (2019). "Parametric first-order
+ *          ambisonic decoding for headphones utilising the Cross-Pattern
+ *          Coherence algorithm". inProc 1st EAA Spatial Audio Signal Processing
+ *          Symposium, Paris, France.
  *
- * [1] McCormack, L., Delikaris-Manias, S. (2019). "Parametric first-order
- *     ambisonic decoding for headphones utilising the Cross-Pattern Coherence
- *     algorithm". inProc 1st EAA Spatial Audio Signal Processing Symposium,
- *     Paris, France.
+ * @author Leo McCormack
+ * @date 12.01.2018
  */
 
 #ifndef __HCROPAC_INTERNAL_H_INCLUDED__
@@ -61,21 +60,15 @@ extern "C" {
 /*                               Internal Enums                               */
 /* ========================================================================== */
 
-/*
- * Enum: PROC_STATUS
- * -----------------
- * Current status of the processing loop.
- *
- * Options:
- *     PROC_STATUS_ONGOING     - Codec is processing input audio, and should not
- *                               be reinitialised at this time.
- *     PROC_STATUS_NOT_ONGOING - Codec is not processing input audio, and may
- *                               be reinitialised if needed.
+/**
+ * Current status of the processing loop. 
  */
-typedef enum _PROC_STATUS{
-    PROC_STATUS_ONGOING = 0,
-    PROC_STATUS_NOT_ONGOING
-}PROC_STATUS;
+typedef enum _HCROPAC_PROC_STATUS{
+    PROC_STATUS_ONGOING = 0, /**< Codec is processing input audio, and should
+                              *   not be reinitialised at this time.*/
+    PROC_STATUS_NOT_ONGOING  /**< Codec is not processing input audio, and may
+                              *   be reinitialised if needed.*/
+}HCROPAC_PROC_STATUS;
 
     
 /* ========================================================================== */
@@ -112,9 +105,7 @@ typedef enum _PROC_STATUS{
 /*                                 Structures                                 */
 /* ========================================================================== */
 
-/*
- * Struct: codecPars
- * -----------------
+/**
  * Contains variables for source DoA analysis, diffuse stream rendering, ERB
  * grouping, sofa file loading, HRTF rendering, HRTF interpolation.
  */
@@ -159,9 +150,7 @@ typedef struct _codecPars
     
 }codecPars;
 
-/*
- * Struct: hcropaclib
- * ------------------
+/**
  * Main structure for hcropac. Contains variables for audio buffers, afSTFT,
  * mixing matrices, internal variables, flags, user parameters
  */
@@ -183,7 +172,7 @@ typedef struct _hcropaclib
     float freqVector[HYBRID_BANDS];          /* frequency vector for time-frequency transform, in Hz */
     
     /* our codec configuration */
-    CODEC_STATUS codecStatus;
+    HCROPAC_CODEC_STATUS codecStatus;
     float progressBar0_1;
     char* progressBarText;
     codecPars* pars;                         /* codec parameters */
@@ -193,8 +182,7 @@ typedef struct _hcropaclib
 #endif
     
     /* internal */
-    PROC_STATUS procStatus;
-    float ambiframe_energy[HYBRID_BANDS][NUM_EARS][TIME_SLOTS];
+    HCROPAC_PROC_STATUS procStatus;
     float_complex Cx[HYBRID_BANDS][NUM_SH_SIGNALS][NUM_SH_SIGNALS];
     float_complex Cy[HYBRID_BANDS][NUM_EARS][NUM_EARS];
     float_complex Cambi[HYBRID_BANDS][NUM_EARS][NUM_EARS];
@@ -218,8 +206,8 @@ typedef struct _hcropaclib
     float balance[HYBRID_BANDS];             /* 0: only diffuse, 1: equal, 2: only directional */ 
     int diffCorrection;                      /* 0:disabled, 1: enabled */
     int useDefaultHRIRsFLAG;                 /* 1: use default HRIRs in database, 0: use those from SOFA file */
-    CH_ORDER chOrdering;                     /* only ACN is supported */
-    NORM_TYPES norm;                         /* N3D or SN3D */
+    HCROPAC_CH_ORDER chOrdering;             /* ACN or FuMa */
+    HCROPAC_NORM_TYPES norm;                 /* N3D or SN3D */
     float covAvgCoeff;                       /* averaging coefficient for covarience matrix */
     float anaLimit_hz;                       /* frequency up to which to perform CroPaC analysis, Hz */
     int enableRotation;                      /* 1: enable rotation, 0: disable */
@@ -234,18 +222,14 @@ typedef struct _hcropaclib
 /*                             Internal Functions                             */
 /* ========================================================================== */
 
-/*
- * Function: hcropaclib_setCodecStatus
- * -----------------------------------
- * Sets codec status.
- *
- * Input Arguments:
- *     hCroPaC   - hcropaclib handle
- *     newStatus - codec status (see 'CODEC_STATUS' enum)
+/**
+ * Sets codec status (see 'HCROPAC_CODEC_STATUS' enum)
  */
-void hcropaclib_setCodecStatus(void* const hCroPaC, CODEC_STATUS newStatus);
+void hcropaclib_setCodecStatus(void* const hCroPaC,
+                               HCROPAC_CODEC_STATUS newStatus);
 
-/* interpolate HRTFs for each time slot */
+/**
+ * Interpolate HRTFs for each time slot */
 void hcropaclib_interpHRTFs(void* const hCroPaC,
                             int band,
                             float secAzi[TIME_SLOTS],

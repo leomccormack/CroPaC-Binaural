@@ -20,28 +20,27 @@
  ==============================================================================
 */
 
-/*
- * Filename: hcropaclib.c
- * ----------------------
- * A first-order parametric binaural Ambisonic decoder for reproducing ambisonic
- * signals over headphones. The algorithm is based on the segregation of the
- * direct and diffuse streams using the Cross-Pattern Coherence (CroPaC) spatial
- * post-filter.
+/**
+ * @file hcropaclib.c
+ * @brief A first-order parametric binaural Ambisonic decoder for reproducing
+ *        ambisonic signals over headphones.
+ *
+ * The algorithm is based on the segregation of the direct and diffuse streams
+ * using the Cross-Pattern Coherence (CroPaC) spatial post-filter.
+ *
  * The output of a linear binaural ambisonic decoder is then adaptively mixed,
  * in such a manner that the covariance matrix of the output stream is brought
  * closer to that of the target covariance matrix, derived from the
  * direct/diffuse analysis. For more information on the method, the reader is
  * directed to [1].
  *
- * Dependencies:
- *     Spatial_Audio_Framework
- * Author, date created:
- *     Leo McCormack, 12.01.2018
+ * @see [1] McCormack, L., Delikaris-Manias, S. (2019). "Parametric first-order
+ *          ambisonic decoding for headphones utilising the Cross-Pattern
+ *          Coherence algorithm". inProc 1st EAA Spatial Audio Signal Processing
+ *          Symposium, Paris, France.
  *
- * [1] McCormack, L., Delikaris-Manias, S. (2019). "Parametric first-order
- *     ambisonic decoding for headphones utilising the Cross-Pattern Coherence
- *     algorithm". inProc 1st EAA Spatial Audio Signal Processing Symposium,
- *     Paris, France.
+ * @author Leo McCormack
+ * @date 12.01.2018
  */
  
 #include "hcropac_internal.h"
@@ -298,10 +297,9 @@ void hcropaclib_initCodec
     for(band=0; band<HYBRID_BANDS; band++)
         for(i=0; i<NUM_EARS; i++)
             for(j=0; j<NUM_SH_SIGNALS; j++)
-                pars->M_dec[band][i][j] = decMtx[band*2*NUM_SH_SIGNALS + i*NUM_SH_SIGNALS + j];
+                pars->M_dec[band][i][j] = decMtx[band*NUM_EARS*NUM_SH_SIGNALS + i*NUM_SH_SIGNALS + j];
     free(decMtx);
- 
-    
+  
     /* ----- SCANNING GRID ----- */
     strcpy(pData->progressBarText,"Computing scanning grid");
     pData->progressBar0_1 = 0.95f;
@@ -355,7 +353,7 @@ void hcropaclib_process
     int o[SH_ORDER + 2], dir_max_idx[TIME_SLOTS];
     const float_complex calpha = cmplxf(1.0f, 0.0f), cbeta = cmplxf(0.0f, 0.0f);
     float inputEnergy, postGain, G, Ex, Eambi;
-    float Rxyz[3][3], ambiFrame_norm[NUM_EARS][TIME_SLOTS], dummy[NUM_EARS][NUM_EARS];
+    float Rxyz[3][3], dummy[NUM_EARS][NUM_EARS]; // ambiFrame_norm[NUM_EARS][TIME_SLOTS],
     float azi[TIME_SLOTS], elev[TIME_SLOTS]; 
 #ifdef ENABLE_RESIDUAL_STREAM
     float Cr[NUM_EARS][NUM_EARS];
@@ -366,11 +364,13 @@ void hcropaclib_process
     float_complex Cdir[NUM_EARS][NUM_EARS], Cdiff[NUM_EARS][NUM_EARS], hrtf_interp[TIME_SLOTS][NUM_EARS];
     float_complex inFrame_t[NUM_EARS], outFrame_t[NUM_EARS], interp_M[NUM_EARS][NUM_EARS];
     float_complex eye2[NUM_EARS][NUM_EARS];
+    float_complex B, GB[TIME_SLOTS], w[NUM_SH_SIGNALS], y[TIME_SLOTS][NUM_SH_SIGNALS];
+    float_complex y_dir[TIME_SLOTS][NUM_EARS], y_diff[TIME_SLOTS][NUM_EARS];
+    float_complex a_diff[NUM_SH_SIGNALS];
 #ifdef ENABLE_BINAURAL_DIFF_COH
     float_complex U[NUM_EARS][NUM_EARS], U_Cdiff[NUM_EARS][NUM_EARS];
 #endif
     float* M_rot_tmp;
-
     for (i = 0; i < NUM_EARS; i++)
         for (j = 0; j < NUM_EARS; j++)
             eye2[i][j] = i == j ? cmplxf(1.0f, 0.0f) : cmplxf(0.0f, 0.0f);
@@ -379,8 +379,8 @@ void hcropaclib_process
     int enableRot, enableCroPaC;
     float covAvgCoeff, anaLim;
     float balance[HYBRID_BANDS];
-    NORM_TYPES norm;
-    CH_ORDER chOrdering;
+    HCROPAC_NORM_TYPES norm;
+    HCROPAC_CH_ORDER chOrdering;
     
     /* decode audio to headphones */
     if ( (nSamples == FRAME_SIZE) && (pData->codecStatus == CODEC_STATUS_INITIALISED) ) {
@@ -476,9 +476,6 @@ void hcropaclib_process
                         pars->M_dec[band], NUM_SH_SIGNALS,
                         pData->SHframeTF[band], TIME_SLOTS, &cbeta,
                         pData->ambiframeTF[band], TIME_SLOTS);
-            for(i=0; i<NUM_EARS; i++)
-                for(j=0; j<TIME_SLOTS; j++)
-                    pData->ambiframe_energy[band][i][j] = powf(cabsf(pData->ambiframeTF[band][i][j]), 2.0f);
 #ifdef ENABLE_RESIDUAL_STREAM
             for(i=0; i<NUM_EARS; i++){
                 for(t=0; t<TIME_SLOTS; t++)
@@ -512,25 +509,16 @@ void hcropaclib_process
                 for(j=0; j<NUM_EARS; j++)
                     pData->Cambi[band][i][j] = ccaddf(crmulf(pData->Cambi[band][i][j], covAvgCoeff), crmulf(Cambi_new[i][j], 1.0f-covAvgCoeff));
         }
-            
+        
         /* CroPaC analysis/synthesis per band */
         for(band=0; band<HYBRID_BANDS; band++){
             if(pData->freqVector[band] < anaLim){
-                /* normalise the prototype channel energy */
-                for(i=0; i<NUM_EARS; i++)
-                    for(j=0; j<TIME_SLOTS; j++)
-                        ambiFrame_norm[i][j] = pData->ambiframe_energy[band][i][j] / (pData->ambiframe_energy[band][0][j]+pData->ambiframe_energy[band][1][j]+2.23e-7f);
-
                 /* optain powermap */
                 cblas_cgemm(CblasRowMajor, CblasTrans, CblasNoTrans, TIME_SLOTS, pars->grid_nDirs, NUM_SH_SIGNALS, &calpha,
                             pData->SHframeTF[band], TIME_SLOTS,
                             pars->Y_grid_cmplx, pars->grid_nDirs, &cbeta,
                             pars->pwdmap_cmplx, pars->grid_nDirs);
-                    
-                float_complex B, GB[TIME_SLOTS];
-                float_complex w[NUM_SH_SIGNALS];
-                float_complex y[TIME_SLOTS][NUM_SH_SIGNALS];
-                    
+                
                 /* determine which directions have the most energy per time instance */
                 for(i=0; i<TIME_SLOTS; i++){
                     utility_cimaxv(&pars->pwdmap_cmplx[i*(pars->grid_nDirs)], pars->grid_nDirs, &dir_max_idx[i]);
@@ -563,8 +551,6 @@ void hcropaclib_process
                 hcropaclib_interpHRTFs(hCroPaC, band, azi, elev, hrtf_interp);
 
                 /* Construct target covariance matrix, Cy */
-                float_complex y_dir[TIME_SLOTS][NUM_EARS], y_diff[TIME_SLOTS][NUM_EARS];
-                float_complex a_diff[NUM_SH_SIGNALS];
                 for(i=0; i<TIME_SLOTS; i++){
                     for(j=0; j<NUM_EARS; j++)
                         y_dir[i][j] = ccmulf(hrtf_interp[i][j], GB[i]);
@@ -576,7 +562,6 @@ void hcropaclib_process
                                 pars->M_dec[band], NUM_SH_SIGNALS,
                                 a_diff, 1, &cbeta,
                                 y_diff[i], 1);
-                        
                 }
                 cblas_cgemm(CblasRowMajor, CblasConjTrans, CblasNoTrans, NUM_EARS, NUM_EARS, TIME_SLOTS, &calpha,
                             y_dir, NUM_EARS,
@@ -609,11 +594,10 @@ void hcropaclib_process
                             U_Cdiff, NUM_EARS);
                 memcpy(Cdiff, U_Cdiff, NUM_EARS*NUM_EARS*sizeof(float_complex));
 #endif
-  
                 /* Average Cy over time */
                 for(i=0; i<NUM_EARS; i++)
                     for(j=0; j<NUM_EARS; j++)
-                        pData->Cy[band][i][j] = ccaddf(crmulf(pData->Cy[band][i][j], covAvgCoeff), crmulf(ccaddf(Cdir[i][j], Cdiff[i][j]), 1.0f-covAvgCoeff)); //
+                        pData->Cy[band][i][j] = ccaddf(crmulf(pData->Cy[band][i][j], covAvgCoeff), crmulf(ccaddf(conjf(Cdir[i][j]), conjf(Cdiff[i][j])), 1.0f-covAvgCoeff)); //
 
                 /* formulate optimal mixing matrix */
 #ifdef ENABLE_RESIDUAL_STREAM
@@ -674,7 +658,6 @@ void hcropaclib_process
             for(t=0; t<TIME_SLOTS; t++){
                 for(j=0; j<NUM_EARS; j++)
                     inFrame_t[j] = pData->ambiframeTF[band][j][t];
-     
                 for (i = 0; i < NUM_EARS; i++) {
                     for (j = 0; j < NUM_EARS; j++) {
 #ifndef _MSC_VER
@@ -715,7 +698,7 @@ void hcropaclib_process
         /* for next frame */
         memcpy(pData->current_M, pData->new_M, HYBRID_BANDS*NUM_EARS*NUM_EARS*sizeof(float_complex));
 #ifdef ENABLE_RESIDUAL_STREAM
-        memcpy(pData->current_Mr, pData->new_Mr, HYBRID_BANDS*NUM_EARS*NUM_EARS*sizeof(float_complex));
+        memcpy(pData->current_Mr, pData->new_Mr, HYBRID_BANDS*NUM_EARS*NUM_EARS*sizeof(float));
 #endif
   
         /* inverse-TFT */
@@ -725,7 +708,6 @@ void hcropaclib_process
                     for(ch = 0; ch < NUM_EARS; ch++) {
                         pData->STFTOutputFrameTF[ch].re[band] = crealf(pData->binframeTF[band][ch][t]);
                         pData->STFTOutputFrameTF[ch].im[band] = cimagf(pData->binframeTF[band][ch][t]);
-                        
                     }
                 }
             }
@@ -818,13 +800,13 @@ void hcropaclib_setSofaFilePath(void* const hCroPaC, const char* path)
 void hcropaclib_setChOrder(void* const hCroPaC, int newOrder)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
-    pData->chOrdering = (CH_ORDER)newOrder;
+    pData->chOrdering = (HCROPAC_CH_ORDER)newOrder;
 }
 
 void hcropaclib_setNormType(void* const hCroPaC, int newType)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
-    pData->norm = (NORM_TYPES)newType;
+    pData->norm = (HCROPAC_NORM_TYPES)newType;
 }
 
 void hcropaclib_setEnableDiffCorrection(void* const hCroPaC, int newState)
@@ -897,9 +879,10 @@ void hcropaclib_setRPYflag(void* const hCroPaC, int newState)
     pData->useRollPitchYawFlag = newState;
 }
 
+
 /* Get Functions */
 
-CODEC_STATUS hcropaclib_getCodecStatus(void* const hCroPaC)
+HCROPAC_CODEC_STATUS hcropaclib_getCodecStatus(void* const hCroPaC)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
     return pData->codecStatus;

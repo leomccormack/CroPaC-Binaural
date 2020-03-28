@@ -20,33 +20,32 @@
  ==============================================================================
 */
 
-/*
- * Filename: hcropac_internal.c
- * ----------------------------
- * A first-order parametric binaural Ambisonic decoder for reproducing ambisonic
- * signals over headphones. The algorithm is based on the segregation of the
- * direct and diffuse streams using the Cross-Pattern Coherence (CroPaC) spatial
- * post-filter.
+/**
+ * @file hcropac_internal.c
+ * @brief A first-order parametric binaural Ambisonic decoder for reproducing
+ *        ambisonic signals over headphones.
+ *
+ * The algorithm is based on the segregation of the direct and diffuse streams
+ * using the Cross-Pattern Coherence (CroPaC) spatial post-filter.
+ *
  * The output of a linear binaural ambisonic decoder is then adaptively mixed,
  * in such a manner that the covariance matrix of the output stream is brought
  * closer to that of the target covariance matrix, derived from the
  * direct/diffuse analysis. For more information on the method, the reader is
  * directed to [1].
  *
- * Dependencies:
- *     Spatial_Audio_Framework
- * Author, date created:
- *     Leo McCormack, 12.01.2018
+ * @see [1] McCormack, L., Delikaris-Manias, S. (2019). "Parametric first-order
+ *          ambisonic decoding for headphones utilising the Cross-Pattern
+ *          Coherence algorithm". inProc 1st EAA Spatial Audio Signal Processing
+ *          Symposium, Paris, France.
  *
- * [1] McCormack, L., Delikaris-Manias, S. (2019). "Parametric first-order
- *     ambisonic decoding for headphones utilising the Cross-Pattern Coherence
- *     algorithm". inProc 1st EAA Spatial Audio Signal Processing Symposium,
- *     Paris, France.
+ * @author Leo McCormack
+ * @date 12.01.2018
  */
 
 #include "hcropac_internal.h"
 
-void hcropaclib_setCodecStatus(void* const hCroPaC, CODEC_STATUS newStatus)
+void hcropaclib_setCodecStatus(void* const hCroPaC, HCROPAC_CODEC_STATUS newStatus)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
     if(newStatus==CODEC_STATUS_NOT_INITIALISED){
@@ -61,8 +60,8 @@ void hcropaclib_interpHRTFs
 (
     void* const hCroPaC,
     int band,
-    float secAzi[TIME_SLOTS],
-    float secElev[TIME_SLOTS],
+    float azi[TIME_SLOTS],
+    float elev[TIME_SLOTS],
     float_complex h_intrp[TIME_SLOTS][NUM_EARS]
 )
 {
@@ -79,8 +78,8 @@ void hcropaclib_interpHRTFs
     elevRes = (float)pars->el_res;
     N_azi = (int)(360.0f / aziRes + 0.5f) + 1;
     for(t=0; t<TIME_SLOTS; t++){
-        aziIndex = (int)(matlab_fmodf(secAzi[t] + 180.0f, 360.0f) / aziRes + 0.5f);
-        elevIndex = (int)((secElev[t] + 90.0f) / elevRes + 0.5f);
+        aziIndex = (int)(matlab_fmodf(azi[t] + 180.0f, 360.0f) / aziRes + 0.5f);
+        elevIndex = (int)((elev[t] + 90.0f) / elevRes + 0.5f);
         gridIndex = elevIndex * N_azi + aziIndex;
         memcpy(idx3[t], &(pars->vbap_gtableIdx[gridIndex*3]), 3*sizeof(int));
         memcpy(weights[t], &(pars->vbap_gtableComp[gridIndex*3]), 3*sizeof(float));
