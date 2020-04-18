@@ -7,7 +7,7 @@
               pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
               pluginSilenceInIsSilenceOut="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="cropac_binauralAU" pluginRTASCategory=""
-              aaxIdentifier="com.yourcompany.no" pluginAAXCategory="2" jucerVersion="5.4.4"
+              aaxIdentifier="com.yourcompany.no" pluginAAXCategory="2" jucerVersion="5.4.7"
               buildVST3="0" buildRTAS="0" buildAAX="0" pluginManufacturerEmail="support@yourcompany.com"
               companyName="Aalto" companyEmail="leo.t.mccormack@gmail.com"
               userNotes="_CRT_SECURE_NO_WARNINGS&#10;_WINSOCK_DEPRECATED_NO_WARNINGS"
