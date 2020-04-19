@@ -7,15 +7,15 @@ cd /d "%~dp0"
 
 :: ========================================================================= ::
 :: Check VST2 SDK is where it should be
-IF NOT EXIST "SDKs/VST2_SDK" (
-    echo The VST2 SDK was not found in the following folder: SDKs/VST2_SDK
+IF NOT EXIST "../SDKs/VST2_SDK" (
+    echo The VST2 SDK was not found in the following folder: ../SDKs/VST2_SDK
 	echo You can download the VST2 SDK from here: 
 	echo "https://web.archive.org/web/20181016150224/https://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip"
 	EXIT /B
 ) 
 :: Check that the Spatial_Audio_Framework dependencies are where they should be  
-IF NOT EXIST "SDKs/Spatial_Audio_Framework/dependencies/Win64/lib/saf_mkl_custom.lib" (
-    echo The "saf_mkl_custom.lib" file was not found in the following folder: SDKs/Spatial_Audio_Framework/dependencies/Win64/lib/saf_mkl_custom.lib
+IF NOT EXIST "../SDKs/Spatial_Audio_Framework/dependencies/Win64/lib/saf_mkl_custom.lib" (
+    echo The "saf_mkl_custom.lib" file was not found in the following folder: ../SDKs/Spatial_Audio_Framework/dependencies/Win64/lib/saf_mkl_custom.lib
 	echo you can find instruction on how to acquire it from here:
 	echo "https://github.com/leomccormack/Spatial_Audio_Framework/blob/master/CUSTOM_INTEL_MKL_INTRUCTIONS.md"
 	EXIT /B
