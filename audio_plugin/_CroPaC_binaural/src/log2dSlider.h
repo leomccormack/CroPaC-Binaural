@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 5.4.4
+  Created with Projucer version: 5.4.7
 
   ------------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ class log2dSlider  : public Component
 public:
     //==============================================================================
     log2dSlider (int _width, int _height, float _min_X_value, float _max_X_value, float _min_Y_value, float _max_Y_value, int _nDecimalPoints);
-    ~log2dSlider();
+    ~log2dSlider() override;
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
