@@ -1,6 +1,6 @@
 # CroPaC-Binaural
 
-A VST plug-in implementation of a parametric Ambisonic decoder for headphones [1], based on the Cross-Pattern Coherence (CroPaC) spatial filter [2]. 
+A VST plug-in implementation of a parametric Ambisonic decoder for headphones [1], based on the Cross-Pattern Coherence (CroPaC) spatial filter [2]. Developed using [JUCE](https://github.com/WeAreROLI/JUCE/) and the [Spatial_Audio_Framework](https://github.com/leomccormack/Spatial_Audio_Framework).
 
 ![](CroPaC_Binaural_GUI.png)
 
@@ -18,17 +18,15 @@ First clone the repository (including submodules) with:
 
 ```
 git clone --recursive https://github.com/leomccormack/CroPaC-Binaural
-# or if you have already cloned the repository, update with:
+# or if you have already cloned the repository, update with
 git submodule update --init --recursive
-git pull --recurse-submodules
 ```
 
 ## Prerequisites 
 
-The JUCE [modules](https://github.com/WeAreROLI/JUCE/releases) and [VST2_SDK](https://web.archive.org/web/20181016150224/https://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip), must be placed in the 'SDKs' folder like so:
+The [VST2_SDK](https://web.archive.org/web/20181016150224/https://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip), must be placed in the 'SDKs' folder like so:
 
-```
-SDKs/modules 
+``` 
 SDKs/VST2_SDK
 ```
 
@@ -73,7 +71,7 @@ build-plugin.bat <path/to/Projucer.exe>
 
 ## Authors
 
-* **Leo McCormack** - C/C++ programmer and algorithm design  (contact: leo.mccormack@aalto.fi)
+* **Leo McCormack** - C/C++ programmer and algorithm design  (contact: leo.mccormack(at)aalto.fi)
 * **Symeon Delikaris-Manias** - algorithm design  
 
 ## License
@@ -82,4 +80,4 @@ Note that the CroPaC spatial filter was originally proposed in 2013 for single c
 
 * Delikaris-Manias, S, and Pulkki V. [**"Method for spatial filtering of at least one sound signal, computer readable storage medium and spatial filtering system based on cross-pattern coherence."**](https://patents.google.com/patent/US9681220B2/en) U.S. Patent Application No. 14/648,379
 
-If you wish to use the algorithm for a product, or for other commercial purposes, please contact the authors. The authors do, however, grant permission for commerical usage of this VST plug-in. The code for which is licensed under the GPLv3 License - see the [LICENSE](LICENSE) file for details.
+If you wish to use the algorithm for a commercial product (and not under the GPLv3 license), please contact the authors - see the [LICENSE](LICENSE) file for details.
