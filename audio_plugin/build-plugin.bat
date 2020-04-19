@@ -33,9 +33,9 @@ IF NOT EXIST %1 (
 	EXIT /B
 )
 :: Check output directory exists
-IF NOT EXIST "lib" (
+IF NOT EXIST "../lib" (
     echo Creating lib directory for output binaries
-    mkdir "lib"
+    mkdir "../lib"
 )
 
 :: ========================================================================= ::
