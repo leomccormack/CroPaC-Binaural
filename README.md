@@ -24,22 +24,19 @@ git submodule update --init --recursive
 
 ## Prerequisites 
 
-The [VST2_SDK](https://web.archive.org/web/20181016150224/https://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip), must be placed in the 'SDKs' folder like so:
-
-``` 
+The [VST2_SDK](https://web.archive.org/web/20181016150224/https://download.steinberg.net/sdk_downloads/vstsdk3610_11_06_2018_build_37.zip) should be placed in the 'SDKs' folder like so:
+```
 SDKs/VST2_SDK
 ```
 
-**MacOSX, Windows and Linux (x86_64/amd64) versions**: also require a custom Intel MKL library. Details on how to acquire this library may be found [here](https://github.com/leomccormack/Spatial_Audio_Framework/blob/master/CUSTOM_INTEL_MKL_INTRUCTIONS.md). 
+**MacOSX, Linux and Windows (x86_64/amd64)** users must install a custom Intel MKL library. Detailed instructions on how to do this can be found [here](https://github.com/leomccormack/Spatial_Audio_Framework/blob/master/dependencies/PERFORMANCE_LIBRARY_INSTRUCTIONS.md). 
 
-**Raspberry Pi (ARM) versions** instead require OpenBLAS and LAPACKE libraries:
-
-```
-sudo apt-get update
+**Raspberry Pi (ARM)** users instead require OpenBLAS and LAPACKE libraries:
+``` 
 sudo apt-get install liblapack3 liblapack-dev libopenblas-base libopenblas-dev liblapacke-dev
 ```
 
-**Linux (amd64/ARM) users** must also install the following libraries (the former line for JUCE, the latter line for the Spatial_Audio_Framework):
+**Linux (x86_64/amd64 and ARM)** users must also install the following libraries (the former line for JUCE, and the latter line for the Spatial_Audio_Framework):
 
 ```
 sudo apt-get install x11proto-xinerama-dev libwebkit2gtk-4.0-dev libgtk-3-dev x11proto-xext-dev libcurl4-openssl-dev libasound2-dev
@@ -60,12 +57,12 @@ The plug-in may be built with CMake (version 3.15 or higher):
  make
  ```
 
-## Building the plug-ins without CMake
+## Building the plug-in without CMake
 
 You may also manually open the .jucer file with the Projucer App and click "Save Project". This will generate Visual Studio (2015/2017) solution files, Xcode project files, Linux Makefiles (amd64), and Raspberry Pi Linux Makefiles (ARM), which are placed in:
 
 ```
-audio_plugins/_CroPaC_Binaural_/make/
+audio_plugin/_CroPaC_Binaural_/make/
 ```
 
 To generate project files for other IDEs, you may open and configure the included .jucer files accordingly.
