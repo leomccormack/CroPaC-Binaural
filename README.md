@@ -4,9 +4,8 @@ A VST plug-in implementation of a parametric Ambisonic decoder for headphones [1
 
 ![](cropac_binaural_screenshot.png)
 
-* [1]  McCormack, L., and Delikaris-Manias, S. (2019). **Parametric First-order Ambisonic Decoding for Headphones Utilising the Cross-Pattern Coherence Algorithm**.
+* [1]  McCormack, L., and Delikaris-Manias, S. 2019. [**Parametric First-order Ambisonic Decoding for Headphones Utilising the Cross-Pattern Coherence Algorithm**](docs/mccormack2019parametric.pdf).
 In Proceedings of the 1st EAA Spatial Audio Signal Processing Symposium, Paris, France, September 6-7th 2019.
-* [2] Delikaris-Manias, S., and Pulkki, V. (2013). **Cross pattern coherence algorithm for spatial filtering applications utilizing microphone arrays**. IEEE Transactions on Audio, Speech, and Language Processing, 21(11), 2356-2367.
 
 ## Pre-built plug-in
 
