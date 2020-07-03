@@ -2,7 +2,7 @@
 
 A VST plug-in implementation of a parametric Ambisonic decoder for headphones [1], based on the Cross-Pattern Coherence (CroPaC) spatial filter [2]. Developed using [JUCE](https://github.com/WeAreROLI/JUCE/) and the [Spatial_Audio_Framework](https://github.com/leomccormack/Spatial_Audio_Framework).
 
-![](CroPaC_Binaural_GUI.png)
+![](cropac_binaural_screenshot.png)
 
 * [1]  McCormack, L., and Delikaris-Manias, S. (2019). **Parametric First-order Ambisonic Decoding for Headphones Utilising the Cross-Pattern Coherence Algorithm**.
 In Proceedings of the 1st EAA Spatial Audio Signal Processing Symposium, Paris, France, September 6-7th 2019.
@@ -46,30 +46,31 @@ sudo apt-get install x11proto-xinerama-dev libwebkit2gtk-4.0-dev libgtk-3-dev x1
 sudo apt-get install libhdf5-dev libnetcdf-dev libnetcdff-dev
 ```
 
-## Building the plug-in
+## Building the plug-in via CMake 
 
-When saving the .jucer files with the Projucer App, Visual Studio (2015/2017) solutions, Xcode project files, Linux Makefiles (amd64), and Raspberry Pi Linux Makefiles (ARM) are placed in:
+The plug-in may be built with CMake (version 3.15 or higher):
+ ```
+ mkdir build
+ cmake -S . -B build -DSAF_ENABLE_SOFA_READER_MODULE=1 -DSAF_BUILD_TESTS=1
+ # Linux users must link with an installed shared netcdf library:
+ -DNETCDF_LIBRARY="/usr/lib/x86_64-linux-gnu/libnetcdf.so"
+ # Same for MSYS2 users
+ -DNETCDF_LIBRARY="/c/msys64/mingw64/lib/libnetcdf.dll.a"
+ cd build
+ make
+ ```
+
+## Building the plug-ins without CMake
+
+You may also manually open the .jucer file with the Projucer App and click "Save Project". This will generate Visual Studio (2015/2017) solution files, Xcode project files, Linux Makefiles (amd64), and Raspberry Pi Linux Makefiles (ARM), which are placed in:
 
 ```
-audio_plugins/_CroPaC_binaural/make/
+audio_plugins/_CroPaC_Binaural_/make/
 ```
 
 To generate project files for other IDEs, you may open and configure the included .jucer files accordingly.
 
-## Building via script
-
-**Linux/MacOSX users** may run the included "audio_plugins/build-plugin.sh" script via the Terminal, to build the plug-in:
-```
-bash build-plugin.sh all
-```
-
-**Windows users** may run the included "audio_plugins/build-plugin.bat" script (with "x64 Developer Command Prompt for VS.exe"), to build the plug-in:
-
-```
-build-plugin.bat <path/to/Projucer.exe>
-```
-
-## Developers
+## Contributors
 
 * **Leo McCormack** - C/C++ programmer and algorithm design  (contact: leo.mccormack(at)aalto.fi)
 * **Symeon Delikaris-Manias** - algorithm design  
