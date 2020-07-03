@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+7ab9bff9a1a37982b3e20974316e0183 audio_plugin/_CroPaC_binaural_/cropac_binaural_artefacts/JuceLibraryCode/JuceHeader.h
+26e9cec5ca0c81a2f4509d5e3c12dc1c audio_plugin/_CroPaC_binaural_/cropac_binaural_artefacts/JuceLibraryCode/cropac_binaural_VST/PkgInfo

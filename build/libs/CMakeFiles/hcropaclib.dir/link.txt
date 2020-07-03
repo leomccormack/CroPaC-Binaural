@@ -1,0 +1,2 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc libhcropaclib.a  CMakeFiles/hcropaclib.dir/hcropaclib/src/hcropac_internal.c.o CMakeFiles/hcropaclib.dir/hcropaclib/src/hcropaclib.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib libhcropaclib.a
