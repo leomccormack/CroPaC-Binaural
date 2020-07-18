@@ -159,17 +159,15 @@ typedef struct _codecPars
 typedef struct _hcropaclib
 {
     /* audio buffers + afSTFT time-frequency transform handle */
-    float SHFrameTD[NUM_SH_SIGNALS][FRAME_SIZE];
-    float_complex SHframeTF[HYBRID_BANDS][NUM_SH_SIGNALS][TIME_SLOTS];
-    float_complex SHframeTF_rot[NUM_SH_SIGNALS][TIME_SLOTS];
-    float_complex ambiframeTF[HYBRID_BANDS][NUM_EARS][TIME_SLOTS];
-    float_complex binframeTF[HYBRID_BANDS][NUM_EARS][TIME_SLOTS];
-    complexVector* STFTInputFrameTF;
-    complexVector* STFTOutputFrameTF;
+    float** SHFrameTD;
+    float** binFrameTD;
+    float_complex*** SHframeTF;
+    float_complex** SHframeTF_rot;
+    float_complex*** ambiframeTF;
+    float_complex*** binframeTF;
     float interpolator[TIME_SLOTS];
     void* hSTFT;                             /* afSTFT handle */
     int afSTFTdelay;                         /* for host delay compensation */
-    float** tempHopFrameTD;                  /* temporary multi-channel time-domain buffer of size "HOP_SIZE". */
     int fs;                                  /* host sampling rate */
     float freqVector[HYBRID_BANDS];          /* frequency vector for time-frequency transform, in Hz */
     

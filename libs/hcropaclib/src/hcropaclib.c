@@ -52,7 +52,7 @@ void hcropaclib_create
 {
     hcropaclib_data* pData = (hcropaclib_data*)malloc1d(sizeof(hcropaclib_data));
     *phCroPaC = (void*)pData;
-    int ch, band;
+    int band;
 
     /* default user parameters */
     pData->enableCroPaC = 1;
@@ -76,18 +76,13 @@ void hcropaclib_create
     pData->useRollPitchYawFlag = 0;
     
     /* afSTFT stuff */
-    afSTFTinit(&(pData->hSTFT), HOP_SIZE, NUM_SH_SIGNALS, NUM_EARS, 0, 1);
-    pData->STFTOutputFrameTF = malloc1d(NUM_EARS * sizeof(complexVector));
-    for(ch=0; ch< NUM_EARS; ch++) {
-        pData->STFTOutputFrameTF[ch].re = (float*)calloc1d(HYBRID_BANDS, sizeof(float));
-        pData->STFTOutputFrameTF[ch].im = (float*)calloc1d(HYBRID_BANDS, sizeof(float));
-    }
-    pData->tempHopFrameTD = (float**)malloc2d( MAX(NUM_SH_SIGNALS, NUM_EARS), HOP_SIZE, sizeof(float));
-    pData->STFTInputFrameTF = malloc1d(NUM_SH_SIGNALS * sizeof(complexVector));
-    for(ch=0; ch< NUM_SH_SIGNALS; ch++) {
-        pData->STFTInputFrameTF[ch].re = (float*)calloc1d(HYBRID_BANDS, sizeof(float));
-        pData->STFTInputFrameTF[ch].im = (float*)calloc1d(HYBRID_BANDS, sizeof(float));
-    }
+    afSTFT_create(&(pData->hSTFT), NUM_SH_SIGNALS, NUM_EARS, HOP_SIZE, 0, 1, AFSTFT_BANDS_CH_TIME);
+    pData->SHFrameTD = (float**)malloc2d(NUM_SH_SIGNALS, FRAME_SIZE, sizeof(float));
+    pData->binFrameTD = (float**)malloc2d(NUM_EARS, FRAME_SIZE, sizeof(float));
+    pData->SHframeTF = (float_complex***)malloc3d(HYBRID_BANDS, NUM_SH_SIGNALS, TIME_SLOTS, sizeof(float_complex));
+    pData->SHframeTF_rot = (float_complex**)malloc2d(NUM_SH_SIGNALS, TIME_SLOTS, sizeof(float_complex));
+    pData->ambiframeTF = (float_complex***)malloc3d(HYBRID_BANDS, NUM_EARS, TIME_SLOTS, sizeof(float_complex));
+    pData->binframeTF= (float_complex***)malloc3d(HYBRID_BANDS, NUM_EARS, TIME_SLOTS, sizeof(float_complex));
 
     /* codec data */
     pData->progressBar0_1 = 0.0f;
@@ -125,7 +120,6 @@ void hcropaclib_destroy
 {
     hcropaclib_data *pData = (hcropaclib_data*)(*phCroPaC);
     codecPars *pars;
-    int ch;
     
     if (pData != NULL) {
         /* not safe to free memory during intialisation/processing loop */
@@ -136,18 +130,13 @@ void hcropaclib_destroy
         
         /* free afSTFT and buffers */
         if(pData->hSTFT!=NULL)
-            afSTFTfree(pData->hSTFT);
-        for (ch = 0; ch < NUM_SH_SIGNALS; ch++) {
-            free(pData->STFTInputFrameTF[ch].re);
-            free(pData->STFTInputFrameTF[ch].im);
-        }
-        for (ch = 0; ch< NUM_EARS; ch++) {
-            free(pData->STFTOutputFrameTF[ch].re);
-            free(pData->STFTOutputFrameTF[ch].im);
-        }
-        free(pData->STFTInputFrameTF);
-        free(pData->STFTOutputFrameTF);
-        free(pData->tempHopFrameTD);
+            afSTFT_destroy(&(pData->hSTFT));
+        free(pData->SHFrameTD);
+        free(pData->binFrameTD);
+        free(pData->SHframeTF);
+        free(pData->SHframeTF_rot);
+        free(pData->ambiframeTF);
+        free(pData->binframeTF);
 
         pars = pData->pars;
         free(pars->hrtf_fb);
@@ -161,7 +150,6 @@ void hcropaclib_destroy
         free(pars->vbap_gtableIdx);
         free(pars->Y_grid);
         free(pars->Y_grid_cmplx);
-        
         free(pars);
         
         cdf4sap_cmplx_destroy(&(pData->hCdf));
@@ -181,16 +169,11 @@ void hcropaclib_init
 )
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
-    int band, t;
+    int t;
     
     /* define frequency vector */
     pData->fs = sampleRate;
-    for(band=0; band <HYBRID_BANDS; band++){
-        if(sampleRate == 44100)
-            pData->freqVector[band] =  (float)__afCenterFreq44100[band];
-        else /* Assume 48kHz */
-            pData->freqVector[band] =  (float)__afCenterFreq48e3[band];
-    }
+    afSTFT_getCentreFreqs(pData->hSTFT, (float)sampleRate, HYBRID_BANDS, pData->freqVector);
     
     /* default starting values */
     memset(pData->Cx, 0, HYBRID_BANDS*NUM_SH_SIGNALS*NUM_SH_SIGNALS*sizeof(float_complex));
@@ -237,7 +220,7 @@ void hcropaclib_initCodec
     pData->progressBar0_1 = 0.0f;
     
     /* clear afSTFT buffers */
-    afSTFTclearBuffers(pData->hSTFT);
+    afSTFT_clearBuffers(pData->hSTFT);
     
     /* ----- LOAD HRIRs ----- */
     /* load sofa file or load default hrir data */
@@ -398,57 +381,37 @@ void hcropaclib_process
         enableCroPaC = pData->enableCroPaC;
         anaLim = pData->anaLimit_hz;
         memcpy(balance, pData->balance, HYBRID_BANDS*sizeof(float));
-        
+
         /* Load time-domain data */
+        for(i=0; i < MIN(NUM_SH_SIGNALS, nInputs); i++)
+            utility_svvcopy(inputs[i], FRAME_SIZE, pData->SHFrameTD[i]);
+        for(; i<NUM_SH_SIGNALS; i++)
+            memset(pData->SHFrameTD[i], 0, FRAME_SIZE * sizeof(float)); /* fill remaining channels with zeros */
+
+        /* account for channel order convention */
         switch(chOrdering){
             case CH_ACN:
-                for(i=0; i < MIN(NUM_SH_SIGNALS, nInputs); i++)
-                    utility_svvcopy(inputs[i], FRAME_SIZE, pData->SHFrameTD[i]);
-                for(; i<NUM_SH_SIGNALS; i++)
-                    memset(pData->SHFrameTD[i], 0, FRAME_SIZE * sizeof(float)); /* fill remaining channels with zeros */
+                convertHOAChannelConvention(FLATTEN2D(pData->SHFrameTD), SH_ORDER, FRAME_SIZE, HOA_CH_ORDER_ACN, HOA_CH_ORDER_ACN);
                 break;
-            case CH_FUMA:   /* convert to ACN */
-                if(nInputs>=4){
-                    utility_svvcopy(inputs[0], FRAME_SIZE, pData->SHFrameTD[0]);
-                    utility_svvcopy(inputs[1], FRAME_SIZE, pData->SHFrameTD[3]);
-                    utility_svvcopy(inputs[2], FRAME_SIZE, pData->SHFrameTD[1]);
-                    utility_svvcopy(inputs[3], FRAME_SIZE, pData->SHFrameTD[2]);
-                }
-                else
-                    for(i=0; i<NUM_SH_SIGNALS; i++)
-                        memset(pData->SHFrameTD[i], 0, FRAME_SIZE * sizeof(float));
+            case CH_FUMA:
+                convertHOAChannelConvention(FLATTEN2D(pData->SHFrameTD), SH_ORDER, FRAME_SIZE, HOA_CH_ORDER_FUMA, HOA_CH_ORDER_ACN);
                 break;
         }
-    
+
         /* account for input normalisation scheme */
         switch(norm){
             case NORM_N3D:  /* already in N3D, do nothing */
                 break;
             case NORM_SN3D: /* convert to N3D */
-                for (n = 0; n<SH_ORDER+1; n++)
-                    for (ch = o[n]; ch<o[n+1]; ch++)
-                        for(i = 0; i<FRAME_SIZE; i++)
-                            pData->SHFrameTD[ch][i] *= sqrtf(2.0f*(float)n+1.0f);
+                convertHOANormConvention(FLATTEN2D(pData->SHFrameTD), SH_ORDER, FRAME_SIZE, HOA_NORM_SN3D, HOA_NORM_N3D);
                 break;
-            case NORM_FUMA: /* convert to N3D */
-                for(i = 0; i<FRAME_SIZE; i++)
-                    pData->SHFrameTD[0][i] *= sqrtf(2.0f);
-                for (ch = 1; ch<4; ch++)
-                    for(i = 0; i<FRAME_SIZE; i++)
-                        pData->SHFrameTD[ch][i] *= sqrtf(3.0f);
+            case NORM_FUMA: /* only for first-order, convert to N3D */
+                convertHOANormConvention(FLATTEN2D(pData->SHFrameTD), SH_ORDER, FRAME_SIZE, HOA_NORM_FUMA, HOA_NORM_N3D);
                 break;
         }
         
         /* Apply time-frequency transform (TFT) */
-        for(t=0; t< TIME_SLOTS; t++) {
-            for(ch=0; ch < NUM_SH_SIGNALS; ch++)
-                for(sample=0; sample < HOP_SIZE; sample++)
-                    pData->tempHopFrameTD[ch][sample] = pData->SHFrameTD[ch][sample + t*HOP_SIZE];
-            afSTFTforward(pData->hSTFT, (float**)pData->tempHopFrameTD, (complexVector*)pData->STFTInputFrameTF);
-            for(band=0; band<HYBRID_BANDS; band++)
-                for(ch=0; ch < NUM_SH_SIGNALS; ch++)
-                    pData->SHframeTF[band][ch][t] = cmplxf(pData->STFTInputFrameTF[ch].re[band], pData->STFTInputFrameTF[ch].im[band]);
-        }
+        afSTFT_forward(pData->hSTFT, pData->SHFrameTD, FRAME_SIZE, pData->SHframeTF);
     
         /* Main processing: */
         /* Apply rotation */
@@ -466,9 +429,9 @@ void hcropaclib_process
             for (band = 0; band < HYBRID_BANDS; band++) {
                 cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, NUM_SH_SIGNALS, TIME_SLOTS, NUM_SH_SIGNALS, &calpha,
                             pData->M_rot, NUM_SH_SIGNALS,
-                            pData->SHframeTF[band], TIME_SLOTS, &cbeta,
-                            pData->SHframeTF_rot, TIME_SLOTS);
-                memcpy(pData->SHframeTF[band], pData->SHframeTF_rot, NUM_SH_SIGNALS*TIME_SLOTS*sizeof(float_complex));
+                            FLATTEN2D(pData->SHframeTF[band]), TIME_SLOTS, &cbeta,
+                            FLATTEN2D(pData->SHframeTF_rot), TIME_SLOTS);
+                memcpy(FLATTEN2D(pData->SHframeTF[band]), FLATTEN2D(pData->SHframeTF_rot), NUM_SH_SIGNALS*TIME_SLOTS*sizeof(float_complex));
             }
         }
 
@@ -476,8 +439,8 @@ void hcropaclib_process
         for (band = 0; band < HYBRID_BANDS; band++) {
             cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, NUM_EARS, TIME_SLOTS, NUM_SH_SIGNALS, &calpha,
                         pars->M_dec[band], NUM_SH_SIGNALS,
-                        pData->SHframeTF[band], TIME_SLOTS, &cbeta,
-                        pData->ambiframeTF[band], TIME_SLOTS);
+                        FLATTEN2D(pData->SHframeTF[band]), TIME_SLOTS, &cbeta,
+                        FLATTEN2D(pData->ambiframeTF[band]), TIME_SLOTS);
 #ifdef ENABLE_RESIDUAL_STREAM
             for(i=0; i<NUM_EARS; i++){
                 for(t=0; t<TIME_SLOTS; t++)
@@ -495,8 +458,8 @@ void hcropaclib_process
         for(band=0; band<HYBRID_BANDS; band++){
             /* For input SH */
             cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasConjTrans, NUM_SH_SIGNALS, NUM_SH_SIGNALS, TIME_SLOTS, &calpha,
-                        pData->SHframeTF[band], TIME_SLOTS,
-                        pData->SHframeTF[band], TIME_SLOTS, &cbeta,
+                        FLATTEN2D(pData->SHframeTF[band]), TIME_SLOTS,
+                        FLATTEN2D(pData->SHframeTF[band]), TIME_SLOTS, &cbeta,
                         Cx_new, NUM_SH_SIGNALS);
             for(i=0; i<NUM_SH_SIGNALS; i++)
                 for(j=0; j<NUM_SH_SIGNALS; j++)
@@ -504,8 +467,8 @@ void hcropaclib_process
                 
             /* For prototype */
             cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasConjTrans, NUM_EARS, NUM_EARS, TIME_SLOTS, &calpha,
-                        pData->ambiframeTF[band], TIME_SLOTS,
-                        pData->ambiframeTF[band], TIME_SLOTS, &cbeta,
+                        FLATTEN2D(pData->ambiframeTF[band]), TIME_SLOTS,
+                        FLATTEN2D(pData->ambiframeTF[band]), TIME_SLOTS, &cbeta,
                         Cambi_new, NUM_EARS);
             for(i=0; i<NUM_EARS; i++)
                 for(j=0; j<NUM_EARS; j++)
@@ -517,7 +480,7 @@ void hcropaclib_process
             if(pData->freqVector[band] < anaLim){
                 /* optain powermap */
                 cblas_cgemm(CblasRowMajor, CblasTrans, CblasNoTrans, TIME_SLOTS, pars->grid_nDirs, NUM_SH_SIGNALS, &calpha,
-                            pData->SHframeTF[band], TIME_SLOTS,
+                            FLATTEN2D(pData->SHframeTF[band]), TIME_SLOTS,
                             pars->Y_grid_cmplx, pars->grid_nDirs, &cbeta,
                             pars->pwdmap_cmplx, pars->grid_nDirs);
                 
@@ -710,31 +673,16 @@ void hcropaclib_process
 #endif
   
         /* inverse-TFT */
-        for(t = 0; t < TIME_SLOTS; t++){
-            if(enableCroPaC){
-                for(band = 0; band < HYBRID_BANDS; band++) {
-                    for(ch = 0; ch < NUM_EARS; ch++) {
-                        pData->STFTOutputFrameTF[ch].re[band] = crealf(pData->binframeTF[band][ch][t]);
-                        pData->STFTOutputFrameTF[ch].im[band] = cimagf(pData->binframeTF[band][ch][t]);
-                    }
-                }
-            }
-            else{
-                for (band = 0; band < HYBRID_BANDS; band++) {
-                    for (ch = 0; ch < NUM_EARS; ch++) {
-                        pData->STFTOutputFrameTF[ch].re[band] = crealf(pData->ambiframeTF[band][ch][t]);
-                        pData->STFTOutputFrameTF[ch].im[band] = cimagf(pData->ambiframeTF[band][ch][t]);
-                    }
-                }
-            }
-            afSTFTinverse(pData->hSTFT, pData->STFTOutputFrameTF, pData->tempHopFrameTD);
-            for (ch = 0; ch < MIN(NUM_EARS, nOutputs); ch++)
-                for (sample = 0; sample < HOP_SIZE; sample++)
-                    outputs[ch][sample + t* HOP_SIZE] = pData->tempHopFrameTD[ch][sample] * postGain;
-            for (; ch < nOutputs; ch++) /* fill remaining channels with zeros */
-                for (sample = 0; sample < HOP_SIZE; sample++)
-                    outputs[ch][sample + t* HOP_SIZE] = 0.0f;
-        }
+        if(enableCroPaC)
+            afSTFT_backward(pData->hSTFT, pData->binframeTF, FRAME_SIZE, pData->binFrameTD);
+        else
+            afSTFT_backward(pData->hSTFT, pData->ambiframeTF, FRAME_SIZE, pData->binFrameTD);
+
+        /* Copy to output */
+        for (ch = 0; ch < MIN(NUM_EARS, nOutputs); ch++)
+            utility_svvcopy(pData->binFrameTD[ch], FRAME_SIZE, outputs[ch]);
+        for (; ch < nOutputs; ch++)
+            memset(outputs[ch], 0, FRAME_SIZE*sizeof(float));
     }
     else
         for (ch=0; ch < nOutputs; ch++)
