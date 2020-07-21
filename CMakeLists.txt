@@ -19,6 +19,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Platform specific flags and definitions
 if(MSVC)
+    set(CMAKE_GENERATOR_PLATFORM "x64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
 elseif(APPLE)
