@@ -62,9 +62,9 @@ log2dSlider::log2dSlider (int _width, int _height, float _min_X_value, float _ma
     max_Y_value = _max_Y_value;
     nDecimalPoints = _nDecimalPoints;
 
-    X_vector = NULL;
-    Y_values = NULL;
-    Y_values_int = NULL;
+    X_vector = nullptr;
+    Y_values = nullptr;
+    Y_values_int = nullptr;
     refreshValues = true;
     //[/Constructor]
 }
@@ -132,7 +132,7 @@ void log2dSlider::paint (Graphics& g)
 
     /* draw data */
 
-    if( (X_vector!=NULL) && (useIntValues ? (Y_values_int!=NULL) : (Y_values!=NULL)) ){
+    if( (X_vector!=nullptr) && (useIntValues ? (Y_values_int!=nullptr) : (Y_values!=nullptr)) ){
         float y_range = max_Y_value - min_Y_value;
         for(int xIdx = 0; xIdx<num_X_points-1; xIdx++){
             float Xpixel_1 = MAX(0,(log10f(X_vector[xIdx]+2.23e-13f) - c)/m);
@@ -178,7 +178,7 @@ void log2dSlider::mouseDown (const MouseEvent& e)
     float m = (log10f(max_X_value) - c)/(float)localBounds.getWidth();
     bool shouldContinue = true;
 
-    if( (X_vector!=NULL) && (useIntValues ? (Y_values_int!=NULL) : (Y_values!=NULL)) ){
+    if( (X_vector!=nullptr) && (useIntValues ? (Y_values_int!=nullptr) : (Y_values!=nullptr)) ){
         float y_range = max_Y_value - min_Y_value;
         for(int xIdx = 0; (xIdx<num_X_points-1) && shouldContinue; xIdx++){
             float Xpixel_1 = MAX(0,(log10f(X_vector[xIdx]+2.23e-13f) - c)/m);
@@ -206,7 +206,7 @@ void log2dSlider::mouseDrag (const MouseEvent& e)
     float m = (log10f(max_X_value) - c)/(float)localBounds.getWidth();
     bool shouldContinue = true;
 
-    if( (X_vector!=NULL) && (useIntValues ? (Y_values_int!=NULL) : (Y_values!=NULL)) ){
+    if( (X_vector!=nullptr) && (useIntValues ? (Y_values_int!=nullptr) : (Y_values!=nullptr)) ){
         float y_range = max_Y_value - min_Y_value;
         for(int xIdx = 0; (xIdx<num_X_points-1) && shouldContinue; xIdx++){
             float Xpixel_1 = MAX(0,(log10f(X_vector[xIdx]+2.23e-13f) - c)/m)-6.0f;
