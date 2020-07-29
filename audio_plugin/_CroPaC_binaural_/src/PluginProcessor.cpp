@@ -258,7 +258,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     nNumOutputs = getTotalNumOutputChannels();
     nSampleRate = (int)(sampleRate + 0.5);
 
-	hcropaclib_init(hCroPaC, sampleRate);
+	hcropaclib_init(hCroPaC, nSampleRate);
     AudioProcessor::setLatencySamples(hcropaclib_getProcessingDelay());
 }
 
