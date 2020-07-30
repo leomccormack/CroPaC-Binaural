@@ -65,7 +65,7 @@ void hcropaclib_create
     pData->norm = NORM_SN3D;
     pData->diffCorrection = 0;
     pData->covAvgCoeff = 0.75f;
-    pData->anaLimit_hz = 6.5e3f;
+    pData->anaLimit_hz = 9.5e3f;
     pData->enableRotation = 0;
     pData->yaw = 0.0f;
     pData->pitch = 0.0f;
@@ -262,19 +262,28 @@ void hcropaclib_initCodec
     strcpy(pData->progressBarText,"Computing interpolation table");
     pData->progressBar0_1 = 0.85f;
     float* hrtf_vbap_gtable = NULL;
-    pars->az_res = 2;
-    pars->el_res = 5;
+    pars->az_res = 1;
+    pars->el_res = 4;
     generateVBAPgainTable3D(pars->hrir_dirs_deg,  pars->N_hrir_dirs, pars->az_res, pars->el_res, 0, 0, 0.0f,
                             &hrtf_vbap_gtable, &(pars->N_hrtf_vbap_gtable), &(pars->hrtf_nTriangles));
     pars->vbap_gtableComp = realloc1d(pars->vbap_gtableComp, pars->N_hrtf_vbap_gtable*3*sizeof(float));
     pars->vbap_gtableIdx = realloc1d(pars->vbap_gtableIdx, pars->N_hrtf_vbap_gtable*3*sizeof(int));
     compressVBAPgainTable3D(hrtf_vbap_gtable, pars->N_hrtf_vbap_gtable, pars->N_hrir_dirs, pars->vbap_gtableComp, pars->vbap_gtableIdx);
     free(hrtf_vbap_gtable);
+
+    /* get integration weights */
+    float* weights;
+    if(pars->N_hrir_dirs<1800){
+        weights = malloc1d(pars->N_hrir_dirs*sizeof(float));
+        getVoronoiWeights(pars->hrir_dirs_deg, pars->N_hrir_dirs, 0, weights);
+    }
+    else
+        weights = NULL;
     
     /* ----- COMPUTE PROTO DECODER ----- */
     float_complex* decMtx;
     decMtx = calloc1d(HYBRID_BANDS*NUM_EARS*NUM_SH_SIGNALS, sizeof(float_complex));
-    getBinauralAmbiDecoderMtx(pars->hrtf_fb, pars->hrir_dirs_deg, pars->N_hrir_dirs, HYBRID_BANDS, BINAURAL_DECODER_MAGLS, SH_ORDER, pData->freqVector, pars->itds_s, NULL, pData->diffCorrection, 1, decMtx);
+    getBinauralAmbiDecoderMtx(pars->hrtf_fb, pars->hrir_dirs_deg, pars->N_hrir_dirs, HYBRID_BANDS, BINAURAL_DECODER_MAGLS, SH_ORDER, pData->freqVector, pars->itds_s, weights, pData->diffCorrection, 1, decMtx);
     
     /* replace current decoder */
     memset(pars->M_dec, 0, HYBRID_BANDS*NUM_EARS*NUM_SH_SIGNALS*sizeof(float_complex));
@@ -283,6 +292,7 @@ void hcropaclib_initCodec
             for(j=0; j<NUM_SH_SIGNALS; j++)
                 pars->M_dec[band][i][j] = decMtx[band*NUM_EARS*NUM_SH_SIGNALS + i*NUM_SH_SIGNALS + j];
     free(decMtx);
+    free(weights);
   
     /* ----- SCANNING GRID ----- */
     strcpy(pData->progressBarText,"Computing scanning grid");
@@ -333,7 +343,7 @@ void hcropaclib_process
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
     codecPars* pars = pData->pars;
-    int n, t, sample, ch, i, j, band;
+    int n, t, ch, i, j, band;
     int o[SH_ORDER + 2], dir_max_idx[TIME_SLOTS];
     const float_complex calpha = cmplxf(1.0f, 0.0f), cbeta = cmplxf(0.0f, 0.0f);
     float inputEnergy, postGain, G, Ex, Eambi;
