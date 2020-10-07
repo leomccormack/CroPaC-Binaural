@@ -16,6 +16,8 @@
               enableIAA="0" cppLanguageStandard="11" companyCopyright="Aalto"
               pluginFormats="buildVST" jucerFormatVersion="1">
   <MAINGROUP id="imnfnp" name="cropac_binaural">
+    <FILE id="lQG3C4" name="CroPaCLookAndFeel.h" compile="0" resource="0"
+          file="../resources/CroPaCLookAndFeel.h"/>
     <FILE id="cfF4XI" name="log2dSlider.cpp" compile="1" resource="0" file="src/log2dSlider.cpp"/>
     <FILE id="kvXrLF" name="log2dSlider.h" compile="0" resource="0" file="src/log2dSlider.h"/>
     <FILE id="PnLSCi" name="PluginEditor.cpp" compile="1" resource="0"

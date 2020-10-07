@@ -7,12 +7,12 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 5.4.4
+  Created with Projucer version: 6.0.3
 
   ------------------------------------------------------------------------------
 
   The Projucer is part of the JUCE library.
-  Copyright (c) 2017 - ROLI Ltd.
+  Copyright (c) 2020 - Raw Material Software Limited.
 
   ==============================================================================
 */
@@ -24,6 +24,7 @@
 #include "JuceHeader.h"
 #include "PluginProcessor.h"
 #include "log2dSlider.h"
+#include "../../resources/CroPaCLookAndFeel.h"
 
 typedef enum _CroPaC_WARNINGS{
     k_warning_none,
@@ -50,25 +51,25 @@ typedef enum _CroPaC_WARNINGS{
 class PluginEditor  : public AudioProcessorEditor,
                       public MultiTimer,
                       private FilenameComponentListener,
-                      public Button::Listener,
-                      public ComboBox::Listener,
-                      public Slider::Listener
+                      public juce::Button::Listener,
+                      public juce::ComboBox::Listener,
+                      public juce::Slider::Listener
 {
 public:
     //==============================================================================
     PluginEditor (PluginProcessor* ownerFilter);
-    ~PluginEditor();
+    ~PluginEditor() override;
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
 
     //[/UserMethods]
 
-    void paint (Graphics& g) override;
+    void paint (juce::Graphics& g) override;
     void resized() override;
-    void buttonClicked (Button* buttonThatWasClicked) override;
-    void comboBoxChanged (ComboBox* comboBoxThatHasChanged) override;
-    void sliderValueChanged (Slider* sliderThatWasMoved) override;
+    void buttonClicked (juce::Button* buttonThatWasClicked) override;
+    void comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged) override;
+    void sliderValueChanged (juce::Slider* sliderThatWasMoved) override;
 
 
 
@@ -81,6 +82,9 @@ private:
     OpenGLContext openGLContext;
     double progress = 0.0;
     ProgressBar progressbar;
+
+    /* Look and Feel */
+    CroPaCLookAndFeel LAF;
 
     /* sofa loading */
     FilenameComponent fileChooser;
@@ -104,23 +108,23 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    std::unique_ptr<ToggleButton> TBuseDefaultHRIRs;
-    std::unique_ptr<ComboBox> CBchFormat;
-    std::unique_ptr<ComboBox> CBnormScheme;
-    std::unique_ptr<ToggleButton> TBmaxRE;
-    std::unique_ptr<Slider> s_yaw;
-    std::unique_ptr<Slider> s_pitch;
-    std::unique_ptr<Slider> s_roll;
-    std::unique_ptr<ToggleButton> t_flipYaw;
-    std::unique_ptr<ToggleButton> t_flipPitch;
-    std::unique_ptr<ToggleButton> t_flipRoll;
-    std::unique_ptr<TextEditor> te_oscport;
-    std::unique_ptr<ToggleButton> TBrpyFlag;
-    std::unique_ptr<ToggleButton> TBenableRotation;
-    std::unique_ptr<Slider> s_cov_avg;
-    std::unique_ptr<Slider> s_diff2dir;
-    std::unique_ptr<Slider> s_ana_lim;
-    std::unique_ptr<ToggleButton> TBenableCroPaC;
+    std::unique_ptr<juce::ToggleButton> TBuseDefaultHRIRs;
+    std::unique_ptr<juce::ComboBox> CBchFormat;
+    std::unique_ptr<juce::ComboBox> CBnormScheme;
+    std::unique_ptr<juce::ToggleButton> TBmaxRE;
+    std::unique_ptr<juce::Slider> s_yaw;
+    std::unique_ptr<juce::Slider> s_pitch;
+    std::unique_ptr<juce::Slider> s_roll;
+    std::unique_ptr<juce::ToggleButton> t_flipYaw;
+    std::unique_ptr<juce::ToggleButton> t_flipPitch;
+    std::unique_ptr<juce::ToggleButton> t_flipRoll;
+    std::unique_ptr<juce::TextEditor> te_oscport;
+    std::unique_ptr<juce::ToggleButton> TBrpyFlag;
+    std::unique_ptr<juce::ToggleButton> TBenableRotation;
+    std::unique_ptr<juce::Slider> s_cov_avg;
+    std::unique_ptr<juce::Slider> s_diff2dir;
+    std::unique_ptr<juce::Slider> s_ana_lim;
+    std::unique_ptr<juce::ToggleButton> TBenableCroPaC;
 
 
     //==============================================================================
