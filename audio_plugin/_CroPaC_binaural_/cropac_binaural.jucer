@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="lfkRjX" name="cropac_binaural" projectType="audioplug" version="1.4.0"
+<JUCERPROJECT id="lfkRjX" name="cropac_binaural" projectType="audioplug" version="1.4.1"
               bundleIdentifier="com.AALTO.CROPAC" includeBinaryInAppConfig="1"
               buildVST="1" buildAU="0" pluginName="cropac_binaural" pluginDesc="cropac_binaural"
               pluginManufacturer="AALTO" pluginManufacturerCode="LEOM" pluginCode="CB1O"
@@ -323,7 +323,7 @@
     <MODULES id="juce_opengl" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_osc" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_USE_CAMERA="0"/>
+  <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_USE_CAMERA="0" JUCE_WEB_BROWSER="0"/>
   <LIVE_SETTINGS>
     <WINDOWS/>
     <OSX/>
