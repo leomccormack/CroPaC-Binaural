@@ -49,7 +49,7 @@ PluginProcessor::~PluginProcessor()
 void PluginProcessor::oscMessageReceived(const OSCMessage& message)
 {
     /* if rotation angles are sent as an array \ypr[3] */
-    if (message.size() == 3 && message.getAddressPattern().toString().compare("/ypr")) {
+    if (message.size() == 3 && message.getAddressPattern().toString().compare("ypr")) {
         if (message[0].isFloat32())
             hcropaclib_setYaw(hCroPaC, message[0].getFloat32());
         if (message[1].isFloat32())
@@ -60,11 +60,11 @@ void PluginProcessor::oscMessageReceived(const OSCMessage& message)
     }
     
     /* if rotation angles are sent individually: */
-    if(message.getAddressPattern().toString().compare("/yaw"))
+    if(message.getAddressPattern().toString().compare("yaw"))
         hcropaclib_setYaw(hCroPaC, message[0].getFloat32());
-    else if(message.getAddressPattern().toString().compare("/pitch"))
+    else if(message.getAddressPattern().toString().compare("pitch"))
         hcropaclib_setPitch(hCroPaC, message[0].getFloat32());
-    else if(message.getAddressPattern().toString().compare("/roll"))
+    else if(message.getAddressPattern().toString().compare("roll"))
         hcropaclib_setRoll(hCroPaC, message[0].getFloat32());
 }
 
