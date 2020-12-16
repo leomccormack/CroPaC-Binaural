@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.4
+  Created with Projucer version: 6.0.5
 
   ------------------------------------------------------------------------------
 
@@ -273,7 +273,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     /* tooltips */
     TBenableCroPaC->setTooltip("Enables/Disables the parameteric rendering. When disabled, the plug-in outputs ambisonic decoded audio using the MagLS decoder.");
-    TBmaxRE->setTooltip("Enables/Disables the diffuse correction applied to the magLS ambisonic decoding matrix. This is the same diffuse constraint as the 'C' part of the 'TAC' decoder.");
+    TBmaxRE->setTooltip("Enables/Disables the diffuse covariance constraint applied to the decoding matrix. This is the 'C' part of the 'TAC' decoder. Note, this is not the same as applying diffuse-field EQ on the HRIRs; this is mainly a \"spatial\" manipulation, not a timbral one. Also note that, while it may make recodings sound broader/wider at lower-orders, it does so at the cost of greatly damaging the spatial properties of the recording (pulling everything to the sides: almost stereo-widening); therefore, we would argue that it is not \"correct\" to enable this by default... although, it can sound pretty good in some cases.");
     TBuseDefaultHRIRs->setTooltip("If this is 'ticked', the plug-in is using the default HRIR set from the Spatial_Audio_Framework.");
     fileChooser.setTooltip("Optionally, a custom HRIR set may be loaded via the SOFA standard. Note that if the plug-in fails to load the specified .sofa file, it will revert to the default HRIR data.");
     s_diff2dir->setTooltip("This sets the diffuse-to-direct balance for all frequencies (default is in the middle). Use the 2-D slider to change the balance for specific frequencies.");
@@ -290,6 +290,16 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     t_flipRoll->setTooltip("Flips the sign (+/-) of the 'Roll' rotation angle.");
     te_oscport->setTooltip("The OSC port at which to receive the rotation angles. To facilitate head-tracking, send the rotation angles (in degrees) to this port ID as a 3-element vector 'ypr[3]', following the yaw-pitch-roll convention.");
     TBrpyFlag->setTooltip("If enabled, the plug-in will use the roll-pitch-yaw rotation order convention. If disabled, it will use the yaw-pitch-roll convention.");
+
+    /* Plugin description */
+    pluginDescription.reset (new juce::ComboBox ("new combo box"));
+    addAndMakeVisible (pluginDescription.get());
+    pluginDescription->setBounds (0, 0, 200, 32);
+    pluginDescription->setAlpha(0.0f);
+    pluginDescription->setEnabled(false);
+    pluginDescription->setTooltip(TRANS("This plug-in is an implementation of a parametric binaural Ambisonic decoder, which aims to go beyond conventional linear and time-invarient Ambisonic decoding by estimating spatial parameters (that describe the input sound scene) over time and frequency. These spatial parameters are then used to conduct the mapping of the input Ambisonic signals to the output binaural channels in an adaptive and informed manner. The employed parametric approach is inspired by the COMPASS method. However, along with the Cross-Pattern Coherence (CroPaC) spatial post-filter, it also employs instantaneous source direction estimation and synthesises the output in a linear manner as much as possible; in order to improve the fidelity of the output signals. It is intended for first-order input only. \n\n") +
+                                  TRANS("The plugin first generates intermediate/prototype binaural signals to serve as a good \"starting guess\", in this case the Magnitude-Least-Squares (MagLS) Ambisonic decoder (as found in sparta_ambiBIN) is used. The signal statistics (covariance matrices per frequency band) of these prototype binaural signals are then computed, followed by defining new target covariance matrices that are formed based on the analysed spatial parameters. The problem of applying mixing matrices to the prototype signals such that their narrow-band covariance matrices are brought closer to the target covariance matrices, is then solved by using the covariance-domain framework for spatial audio processing (CDF4SAP); also referred to as \"optimal-mixing\". The approach aims to synthesise signals that exhibit the target covariance matrices first via a linear combination of them as much as possible, followed by \"filling in the gaps\" with a decorrelated version of the prototype signals; as described by a residual mixing matrix (describing what is left). Such processing aims to  improve signal fidelity and also mitigate artefacts arrising due to signal decorrelation.\n\n")+
+                                  TRANS("The \"Diffuse-to-Direct\" control allows the user to give more prominence to the direct sound components (an effect similar to de-reverberation), or to the ambient component (an effect similar to emphasising reverberation in the recording). When set in the middle, the two are balanced. \n\n "));
 
     /* ProgressBar */
     progress = 0.0;
@@ -531,8 +541,8 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 19, y = 92, width = 181, height = 30;
-        juce::String text (TRANS("Enable Diffuse Correction:"));
+        int x = 19, y = 92, width = 205, height = 30;
+        juce::String text (TRANS("Diffuse Cov. Constraint:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -1245,7 +1255,7 @@ BEGIN_JUCER_METADATA
     <TEXT pos="227 92 132 30" fill="solid: ffffffff" hasStroke="0" text="Norm Scheme:"
           fontname="Default font" fontsize="14.0" kerning="0.0" bold="1"
           italic="0" justification="33" typefaceStyle="Bold"/>
-    <TEXT pos="19 92 181 30" fill="solid: ffffffff" hasStroke="0" text="Enable Diffuse Correction:"
+    <TEXT pos="19 92 205 30" fill="solid: ffffffff" hasStroke="0" text="Diffuse Cov. Constraint:"
           fontname="Default font" fontsize="14.0" kerning="0.0" bold="1"
           italic="0" justification="33" typefaceStyle="Bold"/>
     <RECT pos="446 111 196 157" fill="solid: 10f4f4f4" hasStroke="1" stroke="0.8, mitered, butt"
