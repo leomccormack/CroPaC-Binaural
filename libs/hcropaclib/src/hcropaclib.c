@@ -393,7 +393,7 @@ void hcropaclib_process
         memcpy(balance, pData->balance, HYBRID_BANDS*sizeof(float));
 
         /* Load time-domain data */
-        for(i=0; i < MIN(NUM_SH_SIGNALS, nInputs); i++)
+        for(i=0; i < SAF_MIN(NUM_SH_SIGNALS, nInputs); i++)
             utility_svvcopy(inputs[i], FRAME_SIZE, pData->SHFrameTD[i]);
         for(; i<NUM_SH_SIGNALS; i++)
             memset(pData->SHFrameTD[i], 0, FRAME_SIZE * sizeof(float)); /* fill remaining channels with zeros */
@@ -513,7 +513,7 @@ void hcropaclib_process
                                 &(pars->M_rot[dir_max_idx[i]*NUM_SH_SIGNALS*NUM_SH_SIGNALS]), NUM_SH_SIGNALS,
                                 inputFrame_s, 1, &cbeta,
                                 inputFrame_rot, 1);
-                    G = MAX(0.0f, 2.0f*crealf( ccmulf(conjf(inputFrame_rot[0]), crmulf(inputFrame_rot[3], 1.0f/sqrtf(3.0f))) ) /inputEnergy);
+                    G = SAF_MAX(0.0f, 2.0f*crealf( ccmulf(conjf(inputFrame_rot[0]), crmulf(inputFrame_rot[3], 1.0f/sqrtf(3.0f))) ) /inputEnergy);
                     for(j=0; j<NUM_SH_SIGNALS; j++){
                         y[i][j] = pars->Y_grid_cmplx[j*(pars->grid_nDirs)+dir_max_idx[i]];
                         w[j] = crdivf(y[i][j], (float)NUM_SH_SIGNALS);
@@ -627,7 +627,7 @@ void hcropaclib_process
                     pData->transientDetector2[band][i] = pData->transientDetector2[band][i]*beta + (1.0f-beta)*(pData->transientDetector1[band][i]);
                     if(pData->transientDetector2[band][i]>pData->transientDetector1[band][i])
                         pData->transientDetector2[band][i] = pData->transientDetector1[band][i];
-                    transientEQ = MIN(1.0f, 4.0f*(pData->transientDetector2[band][i])/(pData->transientDetector1[band][i]+2.e-9f));
+                    transientEQ = SAF_MIN(1.0f, 4.0f*(pData->transientDetector2[band][i])/(pData->transientDetector1[band][i]+2.e-9f));
                     pData->circBufferFrames[band][i][t] = crmulf(pData->circBufferFrames[band][i][t], transientEQ);
                 }
             }
@@ -689,7 +689,7 @@ void hcropaclib_process
             afSTFT_backward(pData->hSTFT, pData->ambiframeTF, FRAME_SIZE, pData->binFrameTD);
 
         /* Copy to output */
-        for (ch = 0; ch < MIN(NUM_EARS, nOutputs); ch++)
+        for (ch = 0; ch < SAF_MIN(NUM_EARS, nOutputs); ch++)
             utility_svvcopy(pData->binFrameTD[ch], FRAME_SIZE, outputs[ch]);
         for (; ch < nOutputs; ch++)
             memset(outputs[ch], 0, FRAME_SIZE*sizeof(float));
@@ -739,7 +739,7 @@ void hcropaclib_setCovAvg(void* const hCroPaC, float newValue)
 void hcropaclib_setAnaLimit(void* const hCroPaC, float newValue)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
-    pData->anaLimit_hz = CLAMP(newValue, HCROPAC_ANA_LIMIT_MIN_VALUE, HCROPAC_ANA_LIMIT_MAX_VALUE);
+    pData->anaLimit_hz = SAF_CLAMP(newValue, HCROPAC_ANA_LIMIT_MIN_VALUE, HCROPAC_ANA_LIMIT_MAX_VALUE);
 }
 
 void hcropaclib_setUseDefaultHRIRsflag(void* const hCroPaC, int newState)
