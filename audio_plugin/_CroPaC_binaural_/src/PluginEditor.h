@@ -78,8 +78,10 @@ private:
     PluginProcessor* hVst;
     void* hCroPaC;
     void timerCallback(int timerID) override;
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
     double progress = 0.0;
     ProgressBar progressbar;
 
