@@ -337,7 +337,7 @@ void hcropaclib_initCodec
     /* rotation matrices for each grid direction */
     M_rot_tmp = malloc1d(NUM_SH_SIGNALS*NUM_SH_SIGNALS * sizeof(float));
     for(i=0; i<pars->grid_nDirs; i++){
-        yawPitchRoll2Rzyx(pars->grid_dirs_deg[i*2]*M_PI/180.0f, -pars->grid_dirs_deg[i*2+1]*M_PI/180.0f, 0.0f, 0, Rxyz);
+        yawPitchRoll2Rzyx(pars->grid_dirs_deg[i*2]*SAF_PI/180.0f, -pars->grid_dirs_deg[i*2+1]*SAF_PI/180.0f, 0.0f, 0, Rxyz);
         getSHrotMtxReal(Rxyz, M_rot_tmp, SH_ORDER);
         for (j = 0; j < NUM_SH_SIGNALS; j++)
             for (k = 0; k < NUM_SH_SIGNALS; k++)
