@@ -601,7 +601,7 @@ void hcropaclib_process
 
                 /* formulate optimal mixing matrix */
 #ifdef ENABLE_RESIDUAL_STREAM
-                float diag_Cambi[NUM_EARS][NUM_EARS] = {0.0f};
+                float diag_Cambi[NUM_EARS][NUM_EARS] = {{0.0f}};
                 diag_Cambi[0][0] = crealf(pData->Cambi[band][0][0]);
                 diag_Cambi[1][1] = crealf(pData->Cambi[band][1][1]);
                 formulate_M_and_Cr_cmplx(pData->hCdf, (float_complex*)pData->Cambi[band], (float_complex*)pData->Cy[band], (float_complex*)eye2,

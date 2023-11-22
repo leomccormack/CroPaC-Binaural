@@ -48,4 +48,8 @@ juce_set_vst2_sdk_path(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/VST2_SDK)
 add_subdirectory(libs)
 
 # Configure plugin
+option(BUILD_PLUGIN_FORMAT_VST2 "Build VST2 plugin" ON)
+option(BUILD_PLUGIN_FORMAT_VST3 "Build VST3 plugin" OFF)
+option(BUILD_PLUGIN_FORMAT_AU   "Build AU plugin"   OFF)
+option(BUILD_PLUGIN_FORMAT_LV2  "Build LV2 plugin"  OFF)
 add_subdirectory(audio_plugin)
