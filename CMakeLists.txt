@@ -42,7 +42,6 @@ option(SAF_BUILD_EXAMPLES "Build SAF examples."   OFF)
 
 # Add JUCE, Spatial_Audio_Framework, and VST2_SDK to the project
 add_subdirectory(SDKs) 
-juce_set_vst2_sdk_path(${CMAKE_CURRENT_SOURCE_DIR}/SDKs/VST2_SDK)
 
 # Add libs
 add_subdirectory(libs)
