@@ -24,8 +24,8 @@
 
 PluginProcessor::PluginProcessor():
     AudioProcessor(BusesProperties()
-    .withInput("Input", AudioChannelSet::discreteChannels(64), true)
-               .withOutput("Output", AudioChannelSet::discreteChannels(64), true))
+    .withInput("Input", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true)
+               .withOutput("Output", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true))
 {
 	hcropaclib_create(&hCroPaC);
     
@@ -254,8 +254,8 @@ void PluginProcessor::changeProgramName (int /*index*/, const String& /*newName*
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     nHostBlockSize = samplesPerBlock;
-    nNumInputs =  getTotalNumInputChannels();
-    nNumOutputs = getTotalNumOutputChannels();
+    nNumInputs =  jmin(getTotalNumInputChannels(), 256);
+    nNumOutputs = jmin(getTotalNumOutputChannels(), 256);
     nSampleRate = (int)(sampleRate + 0.5);
 
 	hcropaclib_init(hCroPaC, nSampleRate);
@@ -269,15 +269,15 @@ void PluginProcessor::releaseResources()
 void PluginProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
 {
     int nCurrentBlockSize = nHostBlockSize = buffer.getNumSamples();
-    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels());
-    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels());
+    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels(), 256);
+    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels(), 256);
     float* const* bufferData = buffer.getArrayOfWritePointers();
-    float* pFrameData[MAX_NUM_CHANNELS];
+    float* pFrameData[256];
     int framesize = hcropaclib_getFrameSize();
     
     if(nCurrentBlockSize % framesize == 0) { /* divisible by frame size */
         for(int frame = 0; frame < nCurrentBlockSize/framesize; frame++) {
-            for(int ch = 0; ch < buffer.getNumChannels(); ch++)
+            for(int ch = 0; ch < jmin(buffer.getNumChannels(), 256); ch++)
                 pFrameData[ch] = &bufferData[ch][frame*framesize];
             
             /* perform processing */

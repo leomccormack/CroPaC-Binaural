@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(cropac_binaural VERSION 1.4.2) 
+project(cropac_binaural VERSION 1.4.3) 
 
 # juce helper function to create a library, which is configured as a JUCE plugin
 juce_add_plugin(${PROJECT_NAME}
