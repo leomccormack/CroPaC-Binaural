@@ -24,8 +24,8 @@
 
 PluginProcessor::PluginProcessor():
     AudioProcessor(BusesProperties()
-    .withInput("Input", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true)
-               .withOutput("Output", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true))
+    .withInput("Input", AudioChannelSet::discreteChannels(4), true)
+               .withOutput("Output", AudioChannelSet::discreteChannels(2), true))
 {
 	hcropaclib_create(&hCroPaC);
     
