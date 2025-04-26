@@ -371,7 +371,7 @@ void hcropaclib_process
     int n, t, ch, i, j, band;
     int o[SH_ORDER + 2], dir_max_idx[TIME_SLOTS];
     const float_complex calpha = cmplxf(1.0f, 0.0f), cbeta = cmplxf(0.0f, 0.0f);
-    float inputEnergy, postGain, G, Ex, Eambi;
+    float inputEnergy, G, Ex, Eambi;
     float Rxyz[3][3]; // ambiFrame_norm[NUM_EARS][TIME_SLOTS],
     float azi[TIME_SLOTS], elev[TIME_SLOTS]; 
 #ifdef ENABLE_RESIDUAL_STREAM
@@ -411,7 +411,6 @@ void hcropaclib_process
         norm = pData->norm;
         chOrdering = pData->chOrdering;
         enableRot = pData->enableRotation;
-        postGain = powf(10.0f, (POST_GAIN_DB)/20.0f);
         covAvgCoeff = pData->covAvgCoeff;
         enableCroPaC = pData->enableCroPaC;
         anaLim = pData->anaLimit_hz;
