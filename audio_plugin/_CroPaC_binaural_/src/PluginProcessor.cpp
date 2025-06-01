@@ -32,7 +32,7 @@ PluginProcessor::PluginProcessor():
     
     /* specify here on which UDP port number to receive incoming OSC messages */
     osc_port_ID = DEFAULT_OSC_PORT;
-    osc.connect(osc_port_ID);
+     osc.connect(osc_port_ID);
     /* tell the component to listen for OSC messages */
     osc.addListener(this);
     
@@ -47,27 +47,64 @@ PluginProcessor::~PluginProcessor()
 	hcropaclib_destroy(&hCroPaC);
 }
 
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable: 4996)  // MSVC ignore deprecated functions
+#endif
+
 void PluginProcessor::oscMessageReceived(const OSCMessage& message)
 {
     /* if rotation angles are sent as an array \ypr[3] */
     if (message.size() == 3 && message.getAddressPattern().toString().compare("/ypr")==0) {
-        if (message[0].isFloat32())
+        if (message[0].isFloat32()){
+            beginParameterChangeGesture(k_yaw);
             hcropaclib_setYaw(hCroPaC, message[0].getFloat32());
-        if (message[1].isFloat32())
+            endParameterChangeGesture(k_yaw);
+        }
+        if (message[1].isFloat32()){
+            beginParameterChangeGesture(k_pitch);
             hcropaclib_setPitch(hCroPaC, message[1].getFloat32());
-        if (message[2].isFloat32())
+            endParameterChangeGesture(k_pitch);
+        }
+        if (message[2].isFloat32()){
+            beginParameterChangeGesture(k_roll);
             hcropaclib_setRoll(hCroPaC, message[2].getFloat32());
+            endParameterChangeGesture(k_roll);
+        }
         return;
     }
     
     /* if rotation angles are sent individually: */
-    if(message.getAddressPattern().toString().compare("/yaw")==0)
+    if(message.getAddressPattern().toString().compare("/yaw")==0){
+        beginParameterChangeGesture(k_yaw);
         hcropaclib_setYaw(hCroPaC, message[0].getFloat32());
-    else if(message.getAddressPattern().toString().compare("/pitch")==0)
+        endParameterChangeGesture(k_yaw);
+    }
+    else if(message.getAddressPattern().toString().compare("/pitch")==0){
+        beginParameterChangeGesture(k_pitch);
         hcropaclib_setPitch(hCroPaC, message[0].getFloat32());
-    else if(message.getAddressPattern().toString().compare("/roll")==0)
+        endParameterChangeGesture(k_pitch);
+    }
+    else if(message.getAddressPattern().toString().compare("/roll")==0){
+        beginParameterChangeGesture(k_roll);
         hcropaclib_setRoll(hCroPaC, message[0].getFloat32());
+        endParameterChangeGesture(k_roll);
+    }
 }
+
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+    #pragma warning(pop)
+#endif
 
 void PluginProcessor::setParameter (int index, float newValue)
 {
@@ -78,18 +115,40 @@ void PluginProcessor::setParameter (int index, float newValue)
         case k_AnaLimit:        hcropaclib_setAnaLimit(hCroPaC, newValue*(HCROPAC_ANA_LIMIT_MAX_VALUE-HCROPAC_ANA_LIMIT_MIN_VALUE)+HCROPAC_ANA_LIMIT_MIN_VALUE); break;
         case k_covAvgCoeff:     hcropaclib_setCovAvg(hCroPaC, newValue); break;
         case k_balance:         hcropaclib_setBalanceAllBands(hCroPaC, newValue*2.0f); break;
-        case k_enableMaxRE:     hcropaclib_setEnableDiffCorrection(hCroPaC, (int)(newValue + 0.5f)); break;
+        case k_enableDiffCorrection: hcropaclib_setEnableDiffCorrection(hCroPaC, (int)(newValue + 0.5f)); break;
         case k_enableRotation:  hcropaclib_setEnableRotation(hCroPaC, (int)(newValue + 0.5f)); break;
         case k_useRollPitchYaw: hcropaclib_setRPYflag(hCroPaC, (int)(newValue + 0.5f)); break;
         case k_yaw:             hcropaclib_setYaw(hCroPaC, (newValue-0.5f)*360.0f ); break;
-        case k_pitch:           hcropaclib_setPitch(hCroPaC, (newValue - 0.5f)*180.0f); break;
-        case k_roll:            hcropaclib_setRoll(hCroPaC, (newValue - 0.5f)*180.0f); break;
+        case k_pitch:           hcropaclib_setPitch(hCroPaC, (newValue - 0.5f)*360.0f); break;
+        case k_roll:            hcropaclib_setRoll(hCroPaC, (newValue - 0.5f)*360.0f); break;
         case k_flipYaw:         hcropaclib_setFlipYaw(hCroPaC, (int)(newValue + 0.5f)); break;
         case k_flipPitch:       hcropaclib_setFlipPitch(hCroPaC, (int)(newValue + 0.5f)); break;
         case k_flipRoll:        hcropaclib_setFlipRoll(hCroPaC, (int)(newValue + 0.5f)); break;
             
         default: break;
     }
+}
+
+bool PluginProcessor::isParameterAutomatable (int index) const
+{
+    switch (index) {
+        case k_channelOrder: return true;
+        case k_normType: return true;
+        case k_enableCroPaC: return true;
+        case k_AnaLimit: return true;
+        case k_covAvgCoeff: return true;
+        case k_balance: return true;
+        case k_enableDiffCorrection: return false;
+        case k_enableRotation: return true;
+        case k_useRollPitchYaw: return true;
+        case k_yaw: return true;
+        case k_pitch: return true;
+        case k_roll: return true;
+        case k_flipYaw: return true;
+        case k_flipPitch: return true;
+        case k_flipRoll: return true;
+    }
+    return false;
 }
 
 void PluginProcessor::setCurrentProgram (int /*index*/)
@@ -105,12 +164,12 @@ float PluginProcessor::getParameter (int index)
         case k_AnaLimit:         return (hcropaclib_getAnaLimit(hCroPaC)-HCROPAC_ANA_LIMIT_MIN_VALUE)/(HCROPAC_ANA_LIMIT_MAX_VALUE-HCROPAC_ANA_LIMIT_MIN_VALUE);
         case k_covAvgCoeff:      return hcropaclib_getCovAvg(hCroPaC);
         case k_balance:          return hcropaclib_getBalanceAllBands(hCroPaC)/2.0f;
-        case k_enableMaxRE:      return (float)hcropaclib_getEnableDiffCorrection(hCroPaC);
+        case k_enableDiffCorrection: return (float)hcropaclib_getEnableDiffCorrection(hCroPaC);
         case k_enableRotation:   return (float)hcropaclib_getEnableRotation(hCroPaC);
         case k_useRollPitchYaw:  return (float)hcropaclib_getRPYflag(hCroPaC);
         case k_yaw:              return (hcropaclib_getYaw(hCroPaC)/360.0f) + 0.5f;
-        case k_pitch:            return (hcropaclib_getPitch(hCroPaC)/180.0f) + 0.5f;
-        case k_roll:             return (hcropaclib_getRoll(hCroPaC)/180.0f) + 0.5f;
+        case k_pitch:            return (hcropaclib_getPitch(hCroPaC)/360.0f) + 0.5f;
+        case k_roll:             return (hcropaclib_getRoll(hCroPaC)/360.0f) + 0.5f;
         case k_flipYaw:          return (float)hcropaclib_getFlipYaw(hCroPaC);
         case k_flipPitch:        return (float)hcropaclib_getFlipPitch(hCroPaC);
         case k_flipRoll:         return (float)hcropaclib_getFlipRoll(hCroPaC);
@@ -137,7 +196,7 @@ const String PluginProcessor::getParameterName (int index)
         case k_AnaLimit:        return "analysis_limit";
         case k_covAvgCoeff:     return "cov_avg";
         case k_balance:         return "balance (diff-dir)";
-        case k_enableMaxRE:     return "diffuseCorrection";
+        case k_enableDiffCorrection: return "diffuseCorrection";
         case k_enableRotation:  return "enable_rotation";
         case k_useRollPitchYaw: return "use_rpy";
         case k_yaw:             return "yaw";
@@ -170,7 +229,7 @@ const String PluginProcessor::getParameterText(int index)
         case k_AnaLimit:        return String(hcropaclib_getAnaLimit(hCroPaC)) + " Hz";
         case k_covAvgCoeff:     return String(hcropaclib_getCovAvg(hCroPaC));
         case k_balance:         return String(hcropaclib_getBalanceAllBands(hCroPaC));
-        case k_enableMaxRE:     return !hcropaclib_getEnableDiffCorrection(hCroPaC) ? "Off" : "On";
+        case k_enableDiffCorrection: return !hcropaclib_getEnableDiffCorrection(hCroPaC) ? "Off" : "On";
         case k_enableRotation:  return !hcropaclib_getEnableRotation(hCroPaC) ? "Off" : "On";
         case k_useRollPitchYaw: return !hcropaclib_getRPYflag(hCroPaC) ? "YPR" : "RPY";
         case k_yaw:             return String(hcropaclib_getYaw(hCroPaC));

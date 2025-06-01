@@ -64,6 +64,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     s_yaw.reset (new juce::Slider ("new slider"));
     addAndMakeVisible (s_yaw.get());
     s_yaw->setRange (-180, 180, 0.01);
+    s_yaw->setDoubleClickReturnValue(true, 0.0f);
     s_yaw->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_yaw->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
     s_yaw->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
@@ -77,6 +78,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     s_pitch.reset (new juce::Slider ("new slider"));
     addAndMakeVisible (s_pitch.get());
     s_pitch->setRange (-180, 180, 0.01);
+    s_pitch->setDoubleClickReturnValue(true, 0.0f);
     s_pitch->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_pitch->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
     s_pitch->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
@@ -90,6 +92,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     s_roll.reset (new juce::Slider ("new slider"));
     addAndMakeVisible (s_roll.get());
     s_roll->setRange (-180, 180, 0.01);
+    s_roll->setDoubleClickReturnValue(true, 0.0f);
     s_roll->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_roll->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
     s_roll->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
@@ -166,6 +169,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     s_diff2dir.reset (new juce::Slider ("new slider"));
     addAndMakeVisible (s_diff2dir.get());
     s_diff2dir->setRange (0, 2, 0.01);
+    s_diff2dir->setDoubleClickReturnValue(true, 1.0f);
     s_diff2dir->setSliderStyle (juce::Slider::LinearVertical);
     s_diff2dir->setTextBoxStyle (juce::Slider::NoTextBox, false, 80, 20);
     s_diff2dir->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
@@ -856,6 +860,17 @@ void PluginEditor::resized()
 {
 }
 
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable: 4996)  // MSVC ignore deprecated functions
+#endif
+
 void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == TBuseDefaultHRIRs.get())
@@ -868,27 +883,39 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     }
     else if (buttonThatWasClicked == t_flipYaw.get())
     {
+        hVst->beginParameterChangeGesture(k_flipYaw);
         hcropaclib_setFlipYaw(hCroPaC, (int)t_flipYaw->getToggleState());
+        hVst->endParameterChangeGesture(k_flipYaw);
     }
     else if (buttonThatWasClicked == t_flipPitch.get())
     {
+        hVst->beginParameterChangeGesture(k_flipPitch);
         hcropaclib_setFlipPitch(hCroPaC, (int)t_flipPitch->getToggleState());
+        hVst->endParameterChangeGesture(k_flipPitch);
     }
     else if (buttonThatWasClicked == t_flipRoll.get())
     {
+        hVst->beginParameterChangeGesture(k_flipRoll);
         hcropaclib_setFlipRoll(hCroPaC, (int)t_flipRoll->getToggleState());
+        hVst->endParameterChangeGesture(k_flipRoll);
     }
     else if (buttonThatWasClicked == TBrpyFlag.get())
     {
+        hVst->beginParameterChangeGesture(k_useRollPitchYaw);
         hcropaclib_setRPYflag(hCroPaC, (int)TBrpyFlag->getToggleState());
+        hVst->endParameterChangeGesture(k_useRollPitchYaw);
     }
     else if (buttonThatWasClicked == TBenableRotation.get())
     {
+        hVst->beginParameterChangeGesture(k_enableRotation);
         hcropaclib_setEnableRotation(hCroPaC, (int)TBenableRotation->getToggleState());
+        hVst->endParameterChangeGesture(k_enableRotation);
     }
     else if (buttonThatWasClicked == TBenableCroPaC.get())
     {
+        hVst->beginParameterChangeGesture(k_enableCroPaC);
         hcropaclib_setEnableCroPaC(hCroPaC, (int)TBenableCroPaC->getToggleState());
+        hVst->endParameterChangeGesture(k_enableCroPaC);
     }
 }
 
@@ -896,11 +923,15 @@ void PluginEditor::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == CBchFormat.get())
     {
+        hVst->beginParameterChangeGesture(k_channelOrder);
         hcropaclib_setChOrder(hCroPaC, CBchFormat->getSelectedId());
+        hVst->endParameterChangeGesture(k_channelOrder);
     }
     else if (comboBoxThatHasChanged == CBnormScheme.get())
     {
+        hVst->beginParameterChangeGesture(k_normType);
         hcropaclib_setNormType(hCroPaC, CBnormScheme->getSelectedId());
+        hVst->endParameterChangeGesture(k_normType);
     }
 }
 
@@ -908,30 +939,53 @@ void PluginEditor::sliderValueChanged (juce::Slider* sliderThatWasMoved)
 {
     if (sliderThatWasMoved == s_yaw.get())
     {
+        hVst->beginParameterChangeGesture(k_yaw);
         hcropaclib_setYaw(hCroPaC, (float)s_yaw->getValue());
+        hVst->endParameterChangeGesture(k_yaw);
     }
     else if (sliderThatWasMoved == s_pitch.get())
     {
+        hVst->beginParameterChangeGesture(k_pitch);
         hcropaclib_setPitch(hCroPaC, (float)s_pitch->getValue());
+        hVst->endParameterChangeGesture(k_pitch);
     }
     else if (sliderThatWasMoved == s_roll.get())
     {
+        hVst->beginParameterChangeGesture(k_roll);
         hcropaclib_setRoll(hCroPaC, (float)s_roll->getValue());
+        hVst->endParameterChangeGesture(k_roll);
     }
     else if (sliderThatWasMoved == s_cov_avg.get())
     {
+        hVst->beginParameterChangeGesture(k_covAvgCoeff);
         hcropaclib_setCovAvg(hCroPaC, (float)s_cov_avg->getValue());
+        hVst->endParameterChangeGesture(k_covAvgCoeff);
     }
     else if (sliderThatWasMoved == s_diff2dir.get())
     {
+        hVst->beginParameterChangeGesture(k_balance);
         hcropaclib_setBalanceAllBands(hCroPaC, (float)s_diff2dir->getValue());
         balance2dSlider->setRefreshValuesFLAG(true);
+        hVst->endParameterChangeGesture(k_balance);
     }
     else if (sliderThatWasMoved == s_ana_lim.get())
     {
+        hVst->beginParameterChangeGesture(k_AnaLimit);
         hcropaclib_setAnaLimit(hCroPaC, (float)s_ana_lim->getValue());
+        hVst->endParameterChangeGesture(k_AnaLimit);
     }
 }
+
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable: 4996)  // MSVC ignore deprecated functions
+#endif
 
 void PluginEditor::timerCallback(int timerID)
 {
@@ -943,18 +997,21 @@ void PluginEditor::timerCallback(int timerID)
         case TIMER_GUI_RELATED:
 
             /* parameters whos values can change internally should be periodically refreshed */
-            if(TBuseDefaultHRIRs->getToggleState() != hcropaclib_getUseDefaultHRIRsflag(hCroPaC))
-                TBuseDefaultHRIRs->setToggleState(hcropaclib_getUseDefaultHRIRsflag(hCroPaC), dontSendNotification);
-            if(s_yaw->getValue() != hcropaclib_getYaw(hCroPaC))
-                s_yaw->setValue(hcropaclib_getYaw(hCroPaC), dontSendNotification);
-            if(s_pitch->getValue() != hcropaclib_getPitch(hCroPaC))
-                s_pitch->setValue(hcropaclib_getPitch(hCroPaC), dontSendNotification);
-            if(s_roll->getValue() != hcropaclib_getRoll(hCroPaC))
-                s_roll->setValue(hcropaclib_getRoll(hCroPaC), dontSendNotification);
-            if(CBchFormat->getSelectedId() != hcropaclib_getChOrder(hCroPaC))
-                CBchFormat->setSelectedId(hcropaclib_getChOrder(hCroPaC), dontSendNotification);
-            if(CBnormScheme->getSelectedId() != hcropaclib_getNormType(hCroPaC))
-                CBnormScheme->setSelectedId(hcropaclib_getNormType(hCroPaC), dontSendNotification);
+            TBenableCroPaC->setToggleState(hcropaclib_getEnableCroPaC(hCroPaC), dontSendNotification);
+            TBuseDefaultHRIRs->setToggleState(hcropaclib_getUseDefaultHRIRsflag(hCroPaC), dontSendNotification);
+            CBchFormat->setSelectedId(hcropaclib_getChOrder(hCroPaC), dontSendNotification);
+            CBnormScheme->setSelectedId(hcropaclib_getNormType(hCroPaC), dontSendNotification);
+            TBenableRotation->setToggleState(hcropaclib_getEnableRotation(hCroPaC), dontSendNotification);
+            s_cov_avg->setValue(hcropaclib_getCovAvg(hCroPaC), dontSendNotification);
+            s_ana_lim->setValue(hcropaclib_getAnaLimit(hCroPaC), dontSendNotification);
+            s_diff2dir->setValue(hcropaclib_getBalanceAllBands(hCroPaC), dontSendNotification);
+            s_yaw->setValue(hcropaclib_getYaw(hCroPaC), dontSendNotification);
+            s_pitch->setValue(hcropaclib_getPitch(hCroPaC), dontSendNotification);
+            s_roll->setValue(hcropaclib_getRoll(hCroPaC), dontSendNotification);
+            t_flipYaw->setToggleState((bool)hcropaclib_getFlipYaw(hCroPaC), dontSendNotification);
+            t_flipPitch->setToggleState((bool)hcropaclib_getFlipPitch(hCroPaC), dontSendNotification);
+            t_flipRoll->setToggleState((bool)hcropaclib_getFlipRoll(hCroPaC), dontSendNotification);
+            TBrpyFlag->setToggleState((bool)hcropaclib_getRPYflag(hCroPaC), dontSendNotification);
 
             /* Progress bar */
             if(hcropaclib_getCodecStatus(hCroPaC)==CODEC_STATUS_INITIALISING){
