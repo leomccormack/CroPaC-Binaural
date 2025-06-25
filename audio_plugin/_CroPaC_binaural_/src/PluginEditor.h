@@ -45,7 +45,7 @@ class PluginEditor  : public AudioProcessorEditor,
                       public juce::Slider::Listener
 {
 public:
-    PluginEditor (PluginProcessor* ownerFilter);
+    PluginEditor (PluginProcessor& p);
     ~PluginEditor() override;
 
     void paint (juce::Graphics& g) override;
@@ -55,7 +55,7 @@ public:
     void sliderValueChanged (juce::Slider* sliderThatWasMoved) override;
 
 private:
-    PluginProcessor* hVst;
+    PluginProcessor& processor;
     void* hCroPaC;
     void timerCallback(int timerID) override;
 #ifndef PLUGIN_EDITOR_DISABLE_OPENGL
@@ -90,22 +90,22 @@ private:
     HyperlinkButton publicationLink { "(Related Publication)", { "https://leomccormack.github.io/sparta-site/docs/help/related-publications/mccormack2019parametric.pdf" } };
 
     std::unique_ptr<juce::ToggleButton> TBuseDefaultHRIRs;
-    std::unique_ptr<juce::ComboBox> CBchFormat;
-    std::unique_ptr<juce::ComboBox> CBnormScheme;
-    std::unique_ptr<juce::ToggleButton> TBmaxRE;
-    std::unique_ptr<juce::Slider> s_yaw;
-    std::unique_ptr<juce::Slider> s_pitch;
-    std::unique_ptr<juce::Slider> s_roll;
-    std::unique_ptr<juce::ToggleButton> t_flipYaw;
-    std::unique_ptr<juce::ToggleButton> t_flipPitch;
-    std::unique_ptr<juce::ToggleButton> t_flipRoll;
+    std::unique_ptr<ComboBoxWithAttachment> CBchFormat;
+    std::unique_ptr<ComboBoxWithAttachment> CBnormScheme;
+    std::unique_ptr<ToggleButtonWithAttachment> TBmaxRE;
+    std::unique_ptr<SliderWithAttachment> s_yaw;
+    std::unique_ptr<SliderWithAttachment> s_pitch;
+    std::unique_ptr<SliderWithAttachment> s_roll;
+    std::unique_ptr<ToggleButtonWithAttachment> t_flipYaw;
+    std::unique_ptr<ToggleButtonWithAttachment> t_flipPitch;
+    std::unique_ptr<ToggleButtonWithAttachment> t_flipRoll;
     std::unique_ptr<juce::TextEditor> te_oscport;
-    std::unique_ptr<juce::ToggleButton> TBrpyFlag;
-    std::unique_ptr<juce::ToggleButton> TBenableRotation;
-    std::unique_ptr<juce::Slider> s_cov_avg;
-    std::unique_ptr<juce::Slider> s_diff2dir;
-    std::unique_ptr<juce::Slider> s_ana_lim;
-    std::unique_ptr<juce::ToggleButton> TBenableCroPaC;
+    std::unique_ptr<ToggleButtonWithAttachment> TBrpyFlag;
+    std::unique_ptr<ToggleButtonWithAttachment> TBenableRotation;
+    std::unique_ptr<SliderWithAttachment> s_cov_avg;
+    std::unique_ptr<SliderWithAttachment> s_diff2dir;
+    std::unique_ptr<SliderWithAttachment> s_ana_lim;
+    std::unique_ptr<ToggleButtonWithAttachment> TBenableCroPaC;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

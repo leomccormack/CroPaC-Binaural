@@ -23,12 +23,107 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("channelOrder", "ChannelOrder", juce::StringArray{"ACN", "FuMa"}, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("normType", "NormType", juce::StringArray{"N3D", "SN3D", "FuMa"}, 1));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("enableCroPaC", "EnableCroPaC", true));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("anaLimit", "AnaLimit", juce::NormalisableRange<float>(HCROPAC_ANA_LIMIT_MIN_VALUE, HCROPAC_ANA_LIMIT_MAX_VALUE, 0.01f), HCROPAC_ANA_LIMIT_MAX_VALUE));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("covAvgCoeff", "CovAvgCoeff", juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("streamBalance", "StreamBalance", juce::NormalisableRange<float>(0.0f, 2.0f, 0.01f), 1.0f));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("enableDiffCorrection", "EnableDiffCorrection", true, AudioParameterBoolAttributes().withAutomatable(false)));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("enableRotation", "EnableRotation", false));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("useRollPitchYaw", "UseRollPitchYaw", false));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("yaw", "Yaw", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitch", "Pitch", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("roll", "Roll", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("flipYaw", "FlipYaw", false));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("flipPitch", "FlipPitch", false));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("flipRoll", "FlipRoll", false));
+    
+    return { params.begin(), params.end() };
+}
+
+void PluginProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "channelOrder"){
+        hcropaclib_setChOrder(hCroPaC, static_cast<int>(newValue+1.001f));
+    }
+    else if (parameterID == "normType"){
+        hcropaclib_setNormType(hCroPaC, static_cast<int>(newValue+1.001f));
+    }
+    else if (parameterID == "enableCroPaC"){
+        hcropaclib_setEnableCroPaC(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+    else if(parameterID == "anaLimit"){
+        hcropaclib_setAnaLimit(hCroPaC, newValue);
+    }
+    else if(parameterID == "covAvgCoeff"){
+        hcropaclib_setCovAvg(hCroPaC, newValue);
+    }
+    else if(parameterID == "streamBalance"){
+        hcropaclib_setBalanceAllBands(hCroPaC, newValue);
+    }
+    else if (parameterID == "enableDiffCorrection"){
+        hcropaclib_setEnableDiffCorrection(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+    else if (parameterID == "enableRotation"){
+        hcropaclib_setEnableRotation(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+    else if(parameterID == "useRollPitchYaw"){
+        hcropaclib_setRPYflag(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+    else if(parameterID == "yaw"){
+        hcropaclib_setYaw(hCroPaC, newValue);
+    }
+    else if(parameterID == "pitch"){
+        hcropaclib_setPitch(hCroPaC, newValue);
+    }
+    else if(parameterID == "roll"){
+        hcropaclib_setRoll(hCroPaC, newValue);
+    }
+    else if(parameterID == "flipYaw"){
+        hcropaclib_setFlipYaw(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+    else if(parameterID == "flipPitch"){
+        hcropaclib_setFlipPitch(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+    else if(parameterID == "flipRoll"){
+        hcropaclib_setFlipRoll(hCroPaC, static_cast<int>(newValue+0.5f));
+    }
+}
+
+void PluginProcessor::setParameterValuesUsingInternalState()
+{
+    setParameterValue("channelOrder", hcropaclib_getChOrder(hCroPaC)-1);
+    setParameterValue("normType", hcropaclib_getNormType(hCroPaC)-1);
+    setParameterValue("enableCroPaC", hcropaclib_getEnableCroPaC(hCroPaC));
+    setParameterValue("anaLimit", hcropaclib_getAnaLimit(hCroPaC));
+    setParameterValue("covAvgCoeff", hcropaclib_getCovAvg(hCroPaC));
+    setParameterValue("streamBalance", hcropaclib_getBalanceAllBands(hCroPaC));
+    setParameterValue("enableDiffCorrection", hcropaclib_getEnableDiffCorrection(hCroPaC));
+    setParameterValue("enableRotation", hcropaclib_getEnableRotation(hCroPaC));
+    setParameterValue("useRollPitchYaw", hcropaclib_getRPYflag(hCroPaC));
+    setParameterValue("yaw", hcropaclib_getYaw(hCroPaC));
+    setParameterValue("pitch", hcropaclib_getPitch(hCroPaC));
+    setParameterValue("roll", hcropaclib_getRoll(hCroPaC));
+    setParameterValue("flipYaw", hcropaclib_getFlipYaw(hCroPaC));
+    setParameterValue("flipPitch", hcropaclib_getFlipPitch(hCroPaC));
+    setParameterValue("flipRoll", hcropaclib_getFlipRoll(hCroPaC));
+}
+
 PluginProcessor::PluginProcessor():
     AudioProcessor(BusesProperties()
     .withInput("Input", AudioChannelSet::discreteChannels(4), true)
-               .withOutput("Output", AudioChannelSet::discreteChannels(2), true))
+               .withOutput("Output", AudioChannelSet::discreteChannels(2), true)),
+    ParameterManager(*this, createParameterLayout())
 {
 	hcropaclib_create(&hCroPaC);
+    
+    /* Grab defaults */
+    setParameterValuesUsingInternalState();
     
     /* specify here on which UDP port number to receive incoming OSC messages */
     osc_port_ID = DEFAULT_OSC_PORT;
@@ -47,210 +142,41 @@ PluginProcessor::~PluginProcessor()
 	hcropaclib_destroy(&hCroPaC);
 }
 
-#if defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-    #pragma warning(push)
-    #pragma warning(disable: 4996)  // MSVC ignore deprecated functions
-#endif
-
 void PluginProcessor::oscMessageReceived(const OSCMessage& message)
 {
     /* if rotation angles are sent as an array \ypr[3] */
     if (message.size() == 3 && message.getAddressPattern().toString().compare("/ypr")==0) {
         if (message[0].isFloat32()){
-            beginParameterChangeGesture(k_yaw);
-            hcropaclib_setYaw(hCroPaC, message[0].getFloat32());
-            endParameterChangeGesture(k_yaw);
+            setParameterValue("yaw", message[0].getFloat32());
         }
         if (message[1].isFloat32()){
-            beginParameterChangeGesture(k_pitch);
-            hcropaclib_setPitch(hCroPaC, message[1].getFloat32());
-            endParameterChangeGesture(k_pitch);
+            setParameterValue("pitch", message[1].getFloat32());
         }
         if (message[2].isFloat32()){
-            beginParameterChangeGesture(k_roll);
-            hcropaclib_setRoll(hCroPaC, message[2].getFloat32());
-            endParameterChangeGesture(k_roll);
+            setParameterValue("roll", message[2].getFloat32());
         }
         return;
     }
     
     /* if rotation angles are sent individually: */
     if(message.getAddressPattern().toString().compare("/yaw")==0){
-        beginParameterChangeGesture(k_yaw);
-        hcropaclib_setYaw(hCroPaC, message[0].getFloat32());
-        endParameterChangeGesture(k_yaw);
+        setParameterValue("yaw", message[0].getFloat32());
     }
     else if(message.getAddressPattern().toString().compare("/pitch")==0){
-        beginParameterChangeGesture(k_pitch);
-        hcropaclib_setPitch(hCroPaC, message[0].getFloat32());
-        endParameterChangeGesture(k_pitch);
+        setParameterValue("pitch", message[0].getFloat32());
     }
     else if(message.getAddressPattern().toString().compare("/roll")==0){
-        beginParameterChangeGesture(k_roll);
-        hcropaclib_setRoll(hCroPaC, message[0].getFloat32());
-        endParameterChangeGesture(k_roll);
+        setParameterValue("roll", message[0].getFloat32());
     }
-}
-
-#if defined(__clang__)
-    #pragma clang diagnostic pop
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-    #pragma warning(pop)
-#endif
-
-void PluginProcessor::setParameter (int index, float newValue)
-{
-    switch (index) {
-        case k_channelOrder:    hcropaclib_setChOrder(hCroPaC, (int)(newValue*(float)(HCROPAC_NUM_CH_ORDERINGS-1) + 1.5f)); break;
-        case k_normType:        hcropaclib_setNormType(hCroPaC, (int)(newValue*(float)(HCROPAC_NUM_NORM_TYPES-1) + 1.5f)); break;
-        case k_enableCroPaC:    hcropaclib_setEnableCroPaC(hCroPaC, (int)(newValue + 0.5f)); break;
-        case k_AnaLimit:        hcropaclib_setAnaLimit(hCroPaC, newValue*(HCROPAC_ANA_LIMIT_MAX_VALUE-HCROPAC_ANA_LIMIT_MIN_VALUE)+HCROPAC_ANA_LIMIT_MIN_VALUE); break;
-        case k_covAvgCoeff:     hcropaclib_setCovAvg(hCroPaC, newValue); break;
-        case k_balance:         hcropaclib_setBalanceAllBands(hCroPaC, newValue*2.0f); break;
-        case k_enableDiffCorrection: hcropaclib_setEnableDiffCorrection(hCroPaC, (int)(newValue + 0.5f)); break;
-        case k_enableRotation:  hcropaclib_setEnableRotation(hCroPaC, (int)(newValue + 0.5f)); break;
-        case k_useRollPitchYaw: hcropaclib_setRPYflag(hCroPaC, (int)(newValue + 0.5f)); break;
-        case k_yaw:             hcropaclib_setYaw(hCroPaC, (newValue-0.5f)*360.0f ); break;
-        case k_pitch:           hcropaclib_setPitch(hCroPaC, (newValue - 0.5f)*360.0f); break;
-        case k_roll:            hcropaclib_setRoll(hCroPaC, (newValue - 0.5f)*360.0f); break;
-        case k_flipYaw:         hcropaclib_setFlipYaw(hCroPaC, (int)(newValue + 0.5f)); break;
-        case k_flipPitch:       hcropaclib_setFlipPitch(hCroPaC, (int)(newValue + 0.5f)); break;
-        case k_flipRoll:        hcropaclib_setFlipRoll(hCroPaC, (int)(newValue + 0.5f)); break;
-            
-        default: break;
-    }
-}
-
-bool PluginProcessor::isParameterAutomatable (int index) const
-{
-    switch (index) {
-        case k_channelOrder: return true;
-        case k_normType: return true;
-        case k_enableCroPaC: return true;
-        case k_AnaLimit: return true;
-        case k_covAvgCoeff: return true;
-        case k_balance: return true;
-        case k_enableDiffCorrection: return false;
-        case k_enableRotation: return true;
-        case k_useRollPitchYaw: return true;
-        case k_yaw: return true;
-        case k_pitch: return true;
-        case k_roll: return true;
-        case k_flipYaw: return true;
-        case k_flipPitch: return true;
-        case k_flipRoll: return true;
-    }
-    return false;
 }
 
 void PluginProcessor::setCurrentProgram (int /*index*/)
 {
 }
 
-float PluginProcessor::getParameter (int index)
-{
-    switch (index) {
-        case k_channelOrder:     return (float)(hcropaclib_getChOrder(hCroPaC)-1)/(float)(HCROPAC_NUM_CH_ORDERINGS-1);
-        case k_normType:         return (float)(hcropaclib_getNormType(hCroPaC)-1)/(float)(HCROPAC_NUM_NORM_TYPES-1);
-        case k_enableCroPaC:     return (float)hcropaclib_getEnableCroPaC(hCroPaC);
-        case k_AnaLimit:         return (hcropaclib_getAnaLimit(hCroPaC)-HCROPAC_ANA_LIMIT_MIN_VALUE)/(HCROPAC_ANA_LIMIT_MAX_VALUE-HCROPAC_ANA_LIMIT_MIN_VALUE);
-        case k_covAvgCoeff:      return hcropaclib_getCovAvg(hCroPaC);
-        case k_balance:          return hcropaclib_getBalanceAllBands(hCroPaC)/2.0f;
-        case k_enableDiffCorrection: return (float)hcropaclib_getEnableDiffCorrection(hCroPaC);
-        case k_enableRotation:   return (float)hcropaclib_getEnableRotation(hCroPaC);
-        case k_useRollPitchYaw:  return (float)hcropaclib_getRPYflag(hCroPaC);
-        case k_yaw:              return (hcropaclib_getYaw(hCroPaC)/360.0f) + 0.5f;
-        case k_pitch:            return (hcropaclib_getPitch(hCroPaC)/360.0f) + 0.5f;
-        case k_roll:             return (hcropaclib_getRoll(hCroPaC)/360.0f) + 0.5f;
-        case k_flipYaw:          return (float)hcropaclib_getFlipYaw(hCroPaC);
-        case k_flipPitch:        return (float)hcropaclib_getFlipPitch(hCroPaC);
-        case k_flipRoll:         return (float)hcropaclib_getFlipRoll(hCroPaC);
-        default: return 0.0f;
-    }
-}
-
-int PluginProcessor::getNumParameters()
-{
-	return k_NumOfParameters;
-}
-
 const String PluginProcessor::getName() const
 {
     return JucePlugin_Name;
-}
-
-const String PluginProcessor::getParameterName (int index)
-{
-    switch (index) {
-        case k_channelOrder:    return "channel_order";
-        case k_normType:        return "norm_type";
-        case k_enableCroPaC:    return "enable_cropac";
-        case k_AnaLimit:        return "analysis_limit";
-        case k_covAvgCoeff:     return "cov_avg";
-        case k_balance:         return "balance (diff-dir)";
-        case k_enableDiffCorrection: return "diffuseCorrection";
-        case k_enableRotation:  return "enable_rotation";
-        case k_useRollPitchYaw: return "use_rpy";
-        case k_yaw:             return "yaw";
-        case k_pitch:           return "pitch";
-        case k_roll:            return "roll";
-        case k_flipYaw:         return "flip_yaw";
-        case k_flipPitch:       return "flip_pitch";
-        case k_flipRoll:        return "flip_roll";
-        default: return "NULL";
-    }
-}
-
-const String PluginProcessor::getParameterText(int index)
-{
-    switch (index) {
-        case k_channelOrder:
-            switch(hcropaclib_getChOrder(hCroPaC)){
-                case CH_ACN:  return "ACN";
-                case CH_FUMA: return "FuMa";
-                default: return "NULL";
-            }
-        case k_normType:
-            switch(hcropaclib_getNormType(hCroPaC)){
-                case NORM_N3D:  return "N3D";
-                case NORM_SN3D: return "SN3D";
-                case NORM_FUMA: return "FuMa";
-                default: return "NULL";
-            }
-        case k_enableCroPaC:    return !hcropaclib_getEnableCroPaC(hCroPaC) ? "Off" : "On";
-        case k_AnaLimit:        return String(hcropaclib_getAnaLimit(hCroPaC)) + " Hz";
-        case k_covAvgCoeff:     return String(hcropaclib_getCovAvg(hCroPaC));
-        case k_balance:         return String(hcropaclib_getBalanceAllBands(hCroPaC));
-        case k_enableDiffCorrection: return !hcropaclib_getEnableDiffCorrection(hCroPaC) ? "Off" : "On";
-        case k_enableRotation:  return !hcropaclib_getEnableRotation(hCroPaC) ? "Off" : "On";
-        case k_useRollPitchYaw: return !hcropaclib_getRPYflag(hCroPaC) ? "YPR" : "RPY";
-        case k_yaw:             return String(hcropaclib_getYaw(hCroPaC));
-        case k_pitch:           return String(hcropaclib_getPitch(hCroPaC));
-        case k_roll:            return String(hcropaclib_getRoll(hCroPaC));
-        case k_flipYaw:         return !hcropaclib_getFlipYaw(hCroPaC) ? "No-Flip" : "Flip";
-        case k_flipPitch:       return !hcropaclib_getFlipPitch(hCroPaC) ? "No-Flip" : "Flip";
-        case k_flipRoll:        return !hcropaclib_getFlipRoll(hCroPaC) ? "No-Flip" : "Flip";
-            
-        default: return "NULL";
-    }
-}
-
-const String PluginProcessor::getInputChannelName (int channelIndex) const
-{
-    return String (channelIndex + 1);
-}
-
-const String PluginProcessor::getOutputChannelName (int channelIndex) const
-{
-    return String (channelIndex + 1);
 }
 
 double PluginProcessor::getTailLengthSeconds() const
@@ -273,17 +199,6 @@ const String PluginProcessor::getProgramName (int /*index*/)
     return String();
 }
 
-
-bool PluginProcessor::isInputChannelStereoPair (int /*index*/) const
-{
-    return true;
-}
-
-bool PluginProcessor::isOutputChannelStereoPair (int /*index*/) const
-{
-    return true;
-}
-
 bool PluginProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
@@ -300,11 +215,6 @@ bool PluginProcessor::producesMidi() const
    #else
     return false;
    #endif
-}
-
-bool PluginProcessor::silenceInProducesSilenceOut() const
-{
-    return false;
 }
 
 void PluginProcessor::changeProgramName (int /*index*/, const String& /*newName*/)
@@ -356,49 +266,38 @@ bool PluginProcessor::hasEditor() const
 
 AudioProcessorEditor* PluginProcessor::createEditor()
 {
-    return new PluginEditor (this);
+    return new PluginEditor (*this);
 }
 
 //==============================================================================
 void PluginProcessor::getStateInformation (MemoryBlock& destData)
 {
-    XmlElement xml("HCROPACPLUGINSETTINGS");
+    juce::ValueTree state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->setTagName("HCROPACPLUGINSETTINGS");
+    xml->setAttribute("VersionCode", JucePlugin_VersionCode); // added since 0x10405
     
-    xml.setAttribute("EnableCroPaC", hcropaclib_getEnableCroPaC(hCroPaC));
+    /* Now for the other DSP object parameters (that have no JUCE parameter counterpart) */
     for(int band=0; band<hcropaclib_getNumberOfBands(); band++){
-        xml.setAttribute("Balance"+String(band), hcropaclib_getBalance(hCroPaC, band));
+        xml->setAttribute("Balance"+String(band), hcropaclib_getBalance(hCroPaC, band));
     }
-    xml.setAttribute("CovAVG", hcropaclib_getCovAvg(hCroPaC));
-    xml.setAttribute("AnaLim", hcropaclib_getAnaLimit(hCroPaC));
-    
-    xml.setAttribute("UseDefaultHRIRset", hcropaclib_getUseDefaultHRIRsflag(hCroPaC));
-    xml.setAttribute("Norm", hcropaclib_getNormType(hCroPaC));
-    xml.setAttribute("ChOrder", hcropaclib_getChOrder(hCroPaC));
-    xml.setAttribute("maxrE", hcropaclib_getEnableDiffCorrection(hCroPaC));
-    
-    xml.setAttribute("ENABLEROT", hcropaclib_getEnableRotation(hCroPaC));
-    xml.setAttribute("YAW", hcropaclib_getYaw(hCroPaC));
-    xml.setAttribute("PITCH", hcropaclib_getPitch(hCroPaC));
-    xml.setAttribute("ROLL", hcropaclib_getRoll(hCroPaC));
-    xml.setAttribute("FLIP_YAW", hcropaclib_getFlipYaw(hCroPaC));
-    xml.setAttribute("FLIP_PITCH", hcropaclib_getFlipPitch(hCroPaC));
-    xml.setAttribute("FLIP_ROLL", hcropaclib_getFlipRoll(hCroPaC));
-    xml.setAttribute("RPY_FLAG", hcropaclib_getRPYflag(hCroPaC));
-    
-    xml.setAttribute("OSC_PORT", osc_port_ID);
-    
+    xml->setAttribute("UseDefaultHRIRset", hcropaclib_getUseDefaultHRIRsflag(hCroPaC));
     if(!hcropaclib_getUseDefaultHRIRsflag(hCroPaC))
-        xml.setAttribute("SofaFilePath", String(hcropaclib_getSofaFilePath(hCroPaC)));
+        xml->setAttribute("SofaFilePath", String(hcropaclib_getSofaFilePath(hCroPaC)));
+    
+    /* Other */
+    xml->setAttribute("OSC_PORT", osc_port_ID);
 
-    copyXmlToBinary(xml, destData);
+    /* Save */
+    copyXmlToBinary(*xml, destData);
 }
 
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-
-    if (xmlState != nullptr) {
-        if (xmlState->hasTagName("HCROPACPLUGINSETTINGS")) {
+    /* Load */
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    if (xmlState != nullptr && xmlState->hasTagName("HCROPACPLUGINSETTINGS")){
+        if(!xmlState->hasAttribute("VersionCode")){ // pre-0x10405
             if(xmlState->hasAttribute("EnableCroPaC"))
                 hcropaclib_setEnableCroPaC(hCroPaC, xmlState->getIntAttribute("EnableCroPaC", 1));
             
@@ -448,8 +347,28 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                 hcropaclib_setSofaFilePath(hCroPaC, new_cstring);
             }
             
-            hcropaclib_refreshParams(hCroPaC);
+            setParameterValuesUsingInternalState();
         }
+        else if(xmlState->getIntAttribute("VersionCode")>=0x10405){
+            parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
+
+            /* Now for the other DSP object parameters (that have no JUCE parameter counterpart) */
+            if(xmlState->hasAttribute("UseDefaultHRIRset"))
+                hcropaclib_setUseDefaultHRIRsflag(hCroPaC, xmlState->getIntAttribute("UseDefaultHRIRset", 1));
+            if(xmlState->hasAttribute("SofaFilePath")){
+                String directory = xmlState->getStringAttribute("SofaFilePath", "no_file");
+                const char* new_cstring = (const char*)directory.toUTF8();
+                hcropaclib_setSofaFilePath(hCroPaC, new_cstring);
+            }
+            
+            /* Other */
+            if(xmlState->hasAttribute("OSC_PORT")){
+                osc_port_ID = xmlState->getIntAttribute("OSC_PORT", DEFAULT_OSC_PORT);
+                osc.connect(osc_port_ID);
+            }
+        }
+        
+        hcropaclib_refreshParams(hCroPaC);
     }
 }
 

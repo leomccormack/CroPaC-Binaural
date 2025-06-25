@@ -22,8 +22,8 @@
 
 #include "PluginEditor.h"
 
-PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
-    : AudioProcessorEditor(ownerFilter), progressbar(progress), fileChooser ("File", File(), true, false, false,
+PluginEditor::PluginEditor (PluginProcessor& p)
+    : AudioProcessorEditor(p), processor(p), progressbar(progress), fileChooser ("File", File(), true, false, false,
       "*.sofa;*.nc;", String(),
       "Load SOFA File")
 {
@@ -34,17 +34,15 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     TBuseDefaultHRIRs->setBounds (614, 60, 21, 24);
 
-    CBchFormat.reset (new juce::ComboBox ("new combo box"));
+    CBchFormat = std::make_unique<ComboBoxWithAttachment>(p.parameters, "channelOrder");
     addAndMakeVisible (CBchFormat.get());
     CBchFormat->setEditableText (false);
     CBchFormat->setJustificationType (juce::Justification::centredLeft);
-    CBchFormat->setTextWhenNothingSelected (TRANS("ACN"));
-    CBchFormat->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
     CBchFormat->addListener (this);
 
     CBchFormat->setBounds (332, 65, 98, 20);
 
-    CBnormScheme.reset (new juce::ComboBox ("new combo box"));
+    CBnormScheme = std::make_unique<ComboBoxWithAttachment>(p.parameters, "normType");
     addAndMakeVisible (CBnormScheme.get());
     CBnormScheme->setEditableText (false);
     CBnormScheme->setJustificationType (juce::Justification::centredLeft);
@@ -54,17 +52,15 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     CBnormScheme->setBounds (332, 98, 98, 20);
 
-    TBmaxRE.reset (new juce::ToggleButton ("new toggle button"));
+    TBmaxRE = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableDiffCorrection");
     addAndMakeVisible (TBmaxRE.get());
     TBmaxRE->setButtonText (juce::String());
     TBmaxRE->addListener (this);
 
     TBmaxRE->setBounds (192, 96, 22, 24);
 
-    s_yaw.reset (new juce::Slider ("new slider"));
+    s_yaw = std::make_unique<SliderWithAttachment>(p.parameters, "yaw");
     addAndMakeVisible (s_yaw.get());
-    s_yaw->setRange (-180, 180, 0.01);
-    s_yaw->setDoubleClickReturnValue(true, 0.0f);
     s_yaw->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_yaw->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
     s_yaw->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
@@ -75,10 +71,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     s_yaw->setBounds (453, 179, 58, 63);
 
-    s_pitch.reset (new juce::Slider ("new slider"));
+    s_pitch= std::make_unique<SliderWithAttachment>(p.parameters, "pitch");
     addAndMakeVisible (s_pitch.get());
-    s_pitch->setRange (-180, 180, 0.01);
-    s_pitch->setDoubleClickReturnValue(true, 0.0f);
     s_pitch->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_pitch->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
     s_pitch->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
@@ -89,10 +83,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     s_pitch->setBounds (516, 179, 58, 63);
 
-    s_roll.reset (new juce::Slider ("new slider"));
+    s_roll = std::make_unique<SliderWithAttachment>(p.parameters, "roll");
     addAndMakeVisible (s_roll.get());
-    s_roll->setRange (-180, 180, 0.01);
-    s_roll->setDoubleClickReturnValue(true, 0.0f);
     s_roll->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_roll->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
     s_roll->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
@@ -103,21 +95,21 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     s_roll->setBounds (579, 179, 58, 63);
 
-    t_flipYaw.reset (new juce::ToggleButton ("new toggle button"));
+    t_flipYaw = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "flipYaw");
     addAndMakeVisible (t_flipYaw.get());
     t_flipYaw->setButtonText (juce::String());
     t_flipYaw->addListener (this);
 
     t_flipYaw->setBounds (483, 243, 23, 24);
 
-    t_flipPitch.reset (new juce::ToggleButton ("new toggle button"));
+    t_flipPitch = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "flipPitch");
     addAndMakeVisible (t_flipPitch.get());
     t_flipPitch->setButtonText (juce::String());
     t_flipPitch->addListener (this);
 
     t_flipPitch->setBounds (546, 243, 23, 24);
 
-    t_flipRoll.reset (new juce::ToggleButton ("new toggle button"));
+    t_flipRoll = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "flipRoll");
     addAndMakeVisible (t_flipRoll.get());
     t_flipRoll->setButtonText (juce::String());
     t_flipRoll->addListener (this);
@@ -139,23 +131,22 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     te_oscport->setBounds (587, 135, 44, 22);
 
-    TBrpyFlag.reset (new juce::ToggleButton ("new toggle button"));
+    TBrpyFlag = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "useRollPitchYaw");
     addAndMakeVisible (TBrpyFlag.get());
     TBrpyFlag->setButtonText (juce::String());
     TBrpyFlag->addListener (this);
 
     TBrpyFlag->setBounds (492, 135, 32, 24);
 
-    TBenableRotation.reset (new juce::ToggleButton ("new toggle button"));
+    TBenableRotation = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableRotation");
     addAndMakeVisible (TBenableRotation.get());
     TBenableRotation->setButtonText (juce::String());
     TBenableRotation->addListener (this);
 
     TBenableRotation->setBounds (575, 113, 22, 24);
 
-    s_cov_avg.reset (new juce::Slider ("new slider"));
+    s_cov_avg = std::make_unique<SliderWithAttachment>(p.parameters, "covAvgCoeff");
     addAndMakeVisible (s_cov_avg.get());
-    s_cov_avg->setRange (0, 1, 0.01);
     s_cov_avg->setSliderStyle (juce::Slider::LinearHorizontal);
     s_cov_avg->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
     s_cov_avg->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
@@ -166,10 +157,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     s_cov_avg->setBounds (80, 130, 132, 32);
 
-    s_diff2dir.reset (new juce::Slider ("new slider"));
+    s_diff2dir = std::make_unique<SliderWithAttachment>(p.parameters, "streamBalance");
     addAndMakeVisible (s_diff2dir.get());
-    s_diff2dir->setRange (0, 2, 0.01);
-    s_diff2dir->setDoubleClickReturnValue(true, 1.0f);
     s_diff2dir->setSliderStyle (juce::Slider::LinearVertical);
     s_diff2dir->setTextBoxStyle (juce::Slider::NoTextBox, false, 80, 20);
     s_diff2dir->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
@@ -180,9 +169,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     s_diff2dir->setBounds (387, 183, 40, 74);
 
-    s_ana_lim.reset (new juce::Slider ("new slider"));
+    s_ana_lim = std::make_unique<SliderWithAttachment>(p.parameters, "anaLimit");
     addAndMakeVisible (s_ana_lim.get());
-    s_ana_lim->setRange (4000, 20000, 1);
     s_ana_lim->setSliderStyle (juce::Slider::LinearHorizontal);
     s_ana_lim->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
     s_ana_lim->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
@@ -193,7 +181,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     s_ana_lim->setBounds (317, 130, 112, 32);
 
-    TBenableCroPaC.reset (new juce::ToggleButton ("new toggle button"));
+    TBenableCroPaC = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableCroPaC");
     addAndMakeVisible (TBenableCroPaC.get());
     TBenableCroPaC->setButtonText (juce::String());
     TBenableCroPaC->addListener (this);
@@ -202,9 +190,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     setSize (656, 278);
 
-    /* handle to pluginProcessor */
-	hVst = ownerFilter;
-    hCroPaC = hVst->getFXHandle();
+    /* handle to object */
+    hCroPaC = processor.getFXHandle();
 
     /* init OpenGL */
 #ifndef PLUGIN_EDITOR_DISABLE_OPENGL
@@ -226,13 +213,6 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     float* pX_vector;
     float* pY_values;
 
-    /* add Ambisonic convention options */
-    CBchFormat->addItem (TRANS("ACN"), CH_ACN);
-    CBchFormat->addItem (TRANS("FuMa"), CH_FUMA);
-    CBnormScheme->addItem (TRANS("N3D"), NORM_N3D);
-    CBnormScheme->addItem (TRANS("SN3D"), NORM_SN3D);
-    CBnormScheme->addItem (TRANS("FuMa"), NORM_FUMA);
-
     /* create 2d Slider for the balance parameter */
     balance2dSlider.reset (new log2dSlider(360, 62, 100, 20e3, 0, 2, 2));
     addAndMakeVisible (balance2dSlider.get());
@@ -242,24 +222,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     balance2dSlider->setDataHandles(pX_vector, pY_values, nPoints);
 
     /* grab current parameter settings */
-    TBenableCroPaC->setToggleState(hcropaclib_getEnableCroPaC(hCroPaC), dontSendNotification);
     TBuseDefaultHRIRs->setToggleState(hcropaclib_getUseDefaultHRIRsflag(hCroPaC), dontSendNotification);
-    CBchFormat->setSelectedId(hcropaclib_getChOrder(hCroPaC), dontSendNotification);
-    CBnormScheme->setSelectedId(hcropaclib_getNormType(hCroPaC), dontSendNotification);
-    TBmaxRE->setToggleState(hcropaclib_getEnableDiffCorrection(hCroPaC), dontSendNotification);
-    TBenableRotation->setToggleState(hcropaclib_getEnableRotation(hCroPaC), dontSendNotification);
-    s_cov_avg->setValue(hcropaclib_getCovAvg(hCroPaC), dontSendNotification);
-    s_ana_lim->setRange(HCROPAC_ANA_LIMIT_MIN_VALUE, HCROPAC_ANA_LIMIT_MAX_VALUE, 1.0f);
-    s_ana_lim->setValue(hcropaclib_getAnaLimit(hCroPaC), dontSendNotification);
-    s_diff2dir->setValue(hcropaclib_getBalanceAllBands(hCroPaC), dontSendNotification);
-    s_yaw->setValue(hcropaclib_getYaw(hCroPaC), dontSendNotification);
-    s_pitch->setValue(hcropaclib_getPitch(hCroPaC), dontSendNotification);
-    s_roll->setValue(hcropaclib_getRoll(hCroPaC), dontSendNotification);
-    t_flipYaw->setToggleState((bool)hcropaclib_getFlipYaw(hCroPaC), dontSendNotification);
-    t_flipPitch->setToggleState((bool)hcropaclib_getFlipPitch(hCroPaC), dontSendNotification);
-    t_flipRoll->setToggleState((bool)hcropaclib_getFlipRoll(hCroPaC), dontSendNotification);
-    te_oscport->setText(String(hVst->getOscPortID()), dontSendNotification);
-    TBrpyFlag->setToggleState((bool)hcropaclib_getRPYflag(hCroPaC), dontSendNotification);
+    te_oscport->setText(String(processor.getOscPortID()), dontSendNotification);
 
     /* tooltips */
     TBenableCroPaC->setTooltip("Enables/Disables the parameteric rendering. When disabled, the plug-in outputs ambisonic decoded audio using the MagLS decoder.");
@@ -837,13 +801,13 @@ void PluginEditor::paint (juce::Graphics& g)
                        Justification::centredLeft, true);
             break;
         case k_warning_NinputCH:
-            g.drawText(TRANS("Insufficient number of input channels (") + String(hVst->getTotalNumInputChannels()) +
+            g.drawText(TRANS("Insufficient number of input channels (") + String(processor.getTotalNumInputChannels()) +
                        TRANS("/") + String(hcropaclib_getNSHrequired()) + TRANS(")"),
                        getBounds().getWidth()-225, 16, 530, 11,
                        Justification::centredLeft, true);
             break;
         case k_warning_NoutputCH:
-            g.drawText(TRANS("Insufficient number of output channels (") + String(hVst->getTotalNumOutputChannels()) +
+            g.drawText(TRANS("Insufficient number of output channels (") + String(processor.getTotalNumOutputChannels()) +
                        TRANS("/") + String(hcropaclib_getNumEars()) + TRANS(")"),
                        getBounds().getWidth()-225, 16, 530, 11,
                        Justification::centredLeft, true);
@@ -860,132 +824,25 @@ void PluginEditor::resized()
 {
 }
 
-#if defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-    #pragma warning(push)
-    #pragma warning(disable: 4996)  // MSVC ignore deprecated functions
-#endif
-
 void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == TBuseDefaultHRIRs.get())
     {
         hcropaclib_setUseDefaultHRIRsflag(hCroPaC, (int)TBuseDefaultHRIRs->getToggleState());
     }
-    else if (buttonThatWasClicked == TBmaxRE.get())
-    {
-        hcropaclib_setEnableDiffCorrection(hCroPaC, (int)TBmaxRE->getToggleState());
-    }
-    else if (buttonThatWasClicked == t_flipYaw.get())
-    {
-        hVst->beginParameterChangeGesture(k_flipYaw);
-        hcropaclib_setFlipYaw(hCroPaC, (int)t_flipYaw->getToggleState());
-        hVst->endParameterChangeGesture(k_flipYaw);
-    }
-    else if (buttonThatWasClicked == t_flipPitch.get())
-    {
-        hVst->beginParameterChangeGesture(k_flipPitch);
-        hcropaclib_setFlipPitch(hCroPaC, (int)t_flipPitch->getToggleState());
-        hVst->endParameterChangeGesture(k_flipPitch);
-    }
-    else if (buttonThatWasClicked == t_flipRoll.get())
-    {
-        hVst->beginParameterChangeGesture(k_flipRoll);
-        hcropaclib_setFlipRoll(hCroPaC, (int)t_flipRoll->getToggleState());
-        hVst->endParameterChangeGesture(k_flipRoll);
-    }
-    else if (buttonThatWasClicked == TBrpyFlag.get())
-    {
-        hVst->beginParameterChangeGesture(k_useRollPitchYaw);
-        hcropaclib_setRPYflag(hCroPaC, (int)TBrpyFlag->getToggleState());
-        hVst->endParameterChangeGesture(k_useRollPitchYaw);
-    }
-    else if (buttonThatWasClicked == TBenableRotation.get())
-    {
-        hVst->beginParameterChangeGesture(k_enableRotation);
-        hcropaclib_setEnableRotation(hCroPaC, (int)TBenableRotation->getToggleState());
-        hVst->endParameterChangeGesture(k_enableRotation);
-    }
-    else if (buttonThatWasClicked == TBenableCroPaC.get())
-    {
-        hVst->beginParameterChangeGesture(k_enableCroPaC);
-        hcropaclib_setEnableCroPaC(hCroPaC, (int)TBenableCroPaC->getToggleState());
-        hVst->endParameterChangeGesture(k_enableCroPaC);
-    }
 }
 
-void PluginEditor::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
+void PluginEditor::comboBoxChanged (juce::ComboBox* /*comboBoxThatHasChanged*/)
 {
-    if (comboBoxThatHasChanged == CBchFormat.get())
-    {
-        hVst->beginParameterChangeGesture(k_channelOrder);
-        hcropaclib_setChOrder(hCroPaC, CBchFormat->getSelectedId());
-        hVst->endParameterChangeGesture(k_channelOrder);
-    }
-    else if (comboBoxThatHasChanged == CBnormScheme.get())
-    {
-        hVst->beginParameterChangeGesture(k_normType);
-        hcropaclib_setNormType(hCroPaC, CBnormScheme->getSelectedId());
-        hVst->endParameterChangeGesture(k_normType);
-    }
 }
 
 void PluginEditor::sliderValueChanged (juce::Slider* sliderThatWasMoved)
 {
-    if (sliderThatWasMoved == s_yaw.get())
+    if (sliderThatWasMoved == s_diff2dir.get())
     {
-        hVst->beginParameterChangeGesture(k_yaw);
-        hcropaclib_setYaw(hCroPaC, (float)s_yaw->getValue());
-        hVst->endParameterChangeGesture(k_yaw);
-    }
-    else if (sliderThatWasMoved == s_pitch.get())
-    {
-        hVst->beginParameterChangeGesture(k_pitch);
-        hcropaclib_setPitch(hCroPaC, (float)s_pitch->getValue());
-        hVst->endParameterChangeGesture(k_pitch);
-    }
-    else if (sliderThatWasMoved == s_roll.get())
-    {
-        hVst->beginParameterChangeGesture(k_roll);
-        hcropaclib_setRoll(hCroPaC, (float)s_roll->getValue());
-        hVst->endParameterChangeGesture(k_roll);
-    }
-    else if (sliderThatWasMoved == s_cov_avg.get())
-    {
-        hVst->beginParameterChangeGesture(k_covAvgCoeff);
-        hcropaclib_setCovAvg(hCroPaC, (float)s_cov_avg->getValue());
-        hVst->endParameterChangeGesture(k_covAvgCoeff);
-    }
-    else if (sliderThatWasMoved == s_diff2dir.get())
-    {
-        hVst->beginParameterChangeGesture(k_balance);
-        hcropaclib_setBalanceAllBands(hCroPaC, (float)s_diff2dir->getValue());
         balance2dSlider->setRefreshValuesFLAG(true);
-        hVst->endParameterChangeGesture(k_balance);
-    }
-    else if (sliderThatWasMoved == s_ana_lim.get())
-    {
-        hVst->beginParameterChangeGesture(k_AnaLimit);
-        hcropaclib_setAnaLimit(hCroPaC, (float)s_ana_lim->getValue());
-        hVst->endParameterChangeGesture(k_AnaLimit);
     }
 }
-
-#if defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-    #pragma warning(push)
-    #pragma warning(disable: 4996)  // MSVC ignore deprecated functions
-#endif
 
 void PluginEditor::timerCallback(int timerID)
 {
@@ -997,21 +854,7 @@ void PluginEditor::timerCallback(int timerID)
         case TIMER_GUI_RELATED:
 
             /* parameters whos values can change internally should be periodically refreshed */
-            TBenableCroPaC->setToggleState(hcropaclib_getEnableCroPaC(hCroPaC), dontSendNotification);
             TBuseDefaultHRIRs->setToggleState(hcropaclib_getUseDefaultHRIRsflag(hCroPaC), dontSendNotification);
-            CBchFormat->setSelectedId(hcropaclib_getChOrder(hCroPaC), dontSendNotification);
-            CBnormScheme->setSelectedId(hcropaclib_getNormType(hCroPaC), dontSendNotification);
-            TBenableRotation->setToggleState(hcropaclib_getEnableRotation(hCroPaC), dontSendNotification);
-            s_cov_avg->setValue(hcropaclib_getCovAvg(hCroPaC), dontSendNotification);
-            s_ana_lim->setValue(hcropaclib_getAnaLimit(hCroPaC), dontSendNotification);
-            s_diff2dir->setValue(hcropaclib_getBalanceAllBands(hCroPaC), dontSendNotification);
-            s_yaw->setValue(hcropaclib_getYaw(hCroPaC), dontSendNotification);
-            s_pitch->setValue(hcropaclib_getPitch(hCroPaC), dontSendNotification);
-            s_roll->setValue(hcropaclib_getRoll(hCroPaC), dontSendNotification);
-            t_flipYaw->setToggleState((bool)hcropaclib_getFlipYaw(hCroPaC), dontSendNotification);
-            t_flipPitch->setToggleState((bool)hcropaclib_getFlipPitch(hCroPaC), dontSendNotification);
-            t_flipRoll->setToggleState((bool)hcropaclib_getFlipRoll(hCroPaC), dontSendNotification);
-            TBrpyFlag->setToggleState((bool)hcropaclib_getRPYflag(hCroPaC), dontSendNotification);
 
             /* Progress bar */
             if(hcropaclib_getCodecStatus(hCroPaC)==CODEC_STATUS_INITIALISING){
@@ -1049,7 +892,7 @@ void PluginEditor::timerCallback(int timerID)
             }
 
             /* display warning message, if needed */
-            if ((hVst->getCurrentBlockSize() % hcropaclib_getFrameSize()) != 0){
+            if ((processor.getCurrentBlockSize() % hcropaclib_getFrameSize()) != 0){
                 currentWarning = k_warning_frameSize;
                 repaint(0,0,getWidth(),32);
             }
@@ -1061,11 +904,11 @@ void PluginEditor::timerCallback(int timerID)
                 currentWarning = k_warning_mismatch_fs;
                 repaint(0,0,getWidth(),32);
             }
-            else if ((hVst->getCurrentNumInputs() < hcropaclib_getNSHrequired())){
+            else if ((processor.getCurrentNumInputs() < hcropaclib_getNSHrequired())){
                 currentWarning = k_warning_NinputCH;
                 repaint(0,0,getWidth(),32);
             }
-            else if ((hVst->getCurrentNumOutputs() < hcropaclib_getNumEars())){
+            else if ((processor.getCurrentNumOutputs() < hcropaclib_getNumEars())){
                 currentWarning = k_warning_NoutputCH;
                 repaint(0,0,getWidth(),32);
             }
@@ -1075,8 +918,8 @@ void PluginEditor::timerCallback(int timerID)
             }
 
             /* check if OSC port has changed */
-            if(hVst->getOscPortID() != te_oscport->getText().getIntValue())
-                hVst->setOscPortID(te_oscport->getText().getIntValue());
+            if(processor.getOscPortID() != te_oscport->getText().getIntValue())
+                processor.setOscPortID(te_oscport->getText().getIntValue());
             break;
     }
 }
