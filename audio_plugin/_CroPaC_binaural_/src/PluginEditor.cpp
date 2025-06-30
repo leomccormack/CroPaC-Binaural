@@ -40,17 +40,15 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     CBchFormat->setJustificationType (juce::Justification::centredLeft);
     CBchFormat->addListener (this);
 
-    CBchFormat->setBounds (332, 65, 98, 20);
+    CBchFormat->setBounds (280, 98, 73, 20);
 
     CBnormScheme = std::make_unique<ComboBoxWithAttachment>(p.parameters, "normType");
     addAndMakeVisible (CBnormScheme.get());
     CBnormScheme->setEditableText (false);
     CBnormScheme->setJustificationType (juce::Justification::centredLeft);
-    CBnormScheme->setTextWhenNothingSelected (TRANS("N3D"));
-    CBnormScheme->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
     CBnormScheme->addListener (this);
 
-    CBnormScheme->setBounds (332, 98, 98, 20);
+    CBnormScheme->setBounds (357, 98, 73, 20);
 
     TBmaxRE = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableDiffCorrection");
     addAndMakeVisible (TBmaxRE.get());
@@ -187,6 +185,14 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     TBenableCroPaC->addListener (this);
 
     TBenableCroPaC->setBounds (192, 63, 22, 24);
+    
+    CBhrirPreProc = std::make_unique<ComboBoxWithAttachment>(p.parameters, "hrirPreproc");
+    addAndMakeVisible (CBhrirPreProc.get());
+    CBhrirPreProc->setEditableText (false);
+    CBhrirPreProc->setJustificationType (juce::Justification::centredLeft);
+    CBhrirPreProc->addListener (this);
+
+    CBhrirPreProc->setBounds (312, 65, 118, 20);
 
     setSize (656, 278);
 
@@ -244,7 +250,8 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     t_flipRoll->setTooltip("Flips the sign (+/-) of the 'Roll' rotation angle.");
     te_oscport->setTooltip("The OSC port at which to receive the rotation angles. To facilitate head-tracking, send the rotation angles (in degrees) to this port ID as a 3-element vector 'ypr[3]', following the yaw-pitch-roll convention.");
     TBrpyFlag->setTooltip("If enabled, the plug-in will use the roll-pitch-yaw rotation order convention. If disabled, it will use the yaw-pitch-roll convention.");
-
+    CBhrirPreProc->setTooltip("Pre-processing options for the HRIRs. Diffuse-field EQ is based on a weighted summation of all the HRTF magnitudes in the currently loaded set (i.e., removing the common/direction-independent filtering of the HRTFs). The phase-simplification involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin.");
+    
     /* Plugin description */
     pluginDescription.reset (new juce::ComboBox ("new combo box"));
     addAndMakeVisible (pluginDescription.get());
@@ -439,8 +446,8 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 227, y = 58, width = 132, height = 30;
-        juce::String text (TRANS("Channel Order:"));
+        int x = 225, y = 59, width = 132, height = 30;
+        juce::String text (TRANS("HRIR PreProc:"));
         juce::Colour fillColour = juce::Colours::white;
         g.setColour (fillColour);
         g.setFont (juce::FontOptions (14.00f, juce::Font::plain).withStyle ("Bold"));
@@ -449,8 +456,8 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 227, y = 92, width = 132, height = 30;
-        juce::String text (TRANS("Norm Scheme:"));
+        int x = 225, y = 92, width = 132, height = 30;
+        juce::String text (TRANS("Format:"));
         juce::Colour fillColour = juce::Colours::white;
         g.setColour (fillColour);
         g.setFont (juce::FontOptions (14.00f, juce::Font::plain).withStyle ("Bold"));

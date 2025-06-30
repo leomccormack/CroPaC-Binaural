@@ -84,6 +84,14 @@ typedef enum _HCROPAC_NORM_TYPES {
 /** Number of normalisation options */
 #define HCROPAC_NUM_NORM_TYPES ( 3 )
 
+/** Available HRIR pre-preprocessing options */
+typedef enum {
+    HRIR_PREPROC_OFF = 1,     /**< No pre-processing active */
+    HRIR_PREPROC_EQ,          /**< Diffuse-field EQ (compensates CTF) */
+    HRIR_PREPROC_PHASE,       /**< Phase simplification based on ITD */
+    HRIR_PREPROC_ALL,         /**< Diffuse-field EQ AND phase-simplification */
+}HRIR_PREPROC_OPTIONS;
+
 /**
  * Current status of the codec.
  */
@@ -257,6 +265,9 @@ void hcropaclib_setNormType(void* const hCroPaC, int newType);
  */
 void hcropaclib_setEnableDiffCorrection(void* const hCroPaC, int newState);
 
+/** See #HRIR_PREPROC_OPTIONS */
+void hcropaclib_setHRIRsPreProc(void* const hCroPaC, HRIR_PREPROC_OPTIONS newState);
+
 /**
  * Sets the flag to enable/disable sound-field rotation.
  */
@@ -420,6 +431,9 @@ int hcropaclib_getNormType(void* const hCroPaC);
  *          of America. 2018 Jun 19;143(6):3616-27
  */
 int hcropaclib_getEnableDiffCorrection(void* const hCroPaC);
+
+/** Returns current HRIR_PREPROC_OPTIONS option */
+HRIR_PREPROC_OPTIONS hcropaclib_getHRIRsPreProc(void* const hCroPaC);
 
 int hcropaclib_getNumEars(void);
 

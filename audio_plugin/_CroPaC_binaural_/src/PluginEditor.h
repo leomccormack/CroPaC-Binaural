@@ -106,6 +106,7 @@ private:
     std::unique_ptr<SliderWithAttachment> s_diff2dir;
     std::unique_ptr<SliderWithAttachment> s_ana_lim;
     std::unique_ptr<ToggleButtonWithAttachment> TBenableCroPaC;
+    std::unique_ptr<ComboBoxWithAttachment> CBhrirPreProc;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

@@ -64,6 +64,7 @@ void hcropaclib_create
     pData->chOrdering = CH_ACN;
     pData->norm = NORM_SN3D;
     pData->diffCorrection = 0;
+    pData->hrirProcMode = HRIR_PREPROC_ALL;
     pData->covAvgCoeff = 0.75f;
     pData->anaLimit_hz = 9.5e3f;
     pData->enableRotation = 0;
@@ -275,7 +276,10 @@ void hcropaclib_initCodec
     /* convert hrirs to filterbank coefficients */
     pars->hrtf_fb = realloc1d(pars->hrtf_fb, HYBRID_BANDS * NUM_EARS * (pars->N_hrir_dirs)*sizeof(float_complex));
     HRIRs2HRTFs_afSTFT(pars->hrirs, pars->N_hrir_dirs, pars->hrir_len, HOP_SIZE, 0, 1, pars->hrtf_fb);
-    diffuseFieldEqualiseHRTFs(pars->N_hrir_dirs, pars->itds_s, pData->freqVector, HYBRID_BANDS, NULL, 1, 1, pars->hrtf_fb);
+    diffuseFieldEqualiseHRTFs(pars->N_hrir_dirs, pars->itds_s, pData->freqVector, HYBRID_BANDS, NULL,
+                              pData->hrirProcMode == HRIR_PREPROC_ALL || pData->hrirProcMode == HRIR_PREPROC_EQ ? 1 : 0,
+                              pData->hrirProcMode == HRIR_PREPROC_ALL || pData->hrirProcMode == HRIR_PREPROC_PHASE ? 1 : 0,
+                              pars->hrtf_fb);
     pars->hrtf_fb_mag = realloc1d(pars->hrtf_fb_mag, HYBRID_BANDS*NUM_EARS* (pars->N_hrir_dirs)*sizeof(float));
     for(i=0; i<HYBRID_BANDS*NUM_EARS* (pars->N_hrir_dirs); i++)
         pars->hrtf_fb_mag[i] = cabsf(pars->hrtf_fb[i]);
@@ -808,6 +812,15 @@ void hcropaclib_setEnableDiffCorrection(void* const hCroPaC, int newState)
     }
 }
 
+void hcropaclib_setHRIRsPreProc(void* const hCroPaC, HRIR_PREPROC_OPTIONS newState)
+{
+    hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
+    if(pData->hrirProcMode != newState){
+        pData->hrirProcMode = newState;
+        hcropaclib_setCodecStatus(hCroPaC, CODEC_STATUS_NOT_INITIALISED);
+    }
+}
+
 void hcropaclib_setEnableRotation(void* const hCroPaC, int newState)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
@@ -971,6 +984,12 @@ int hcropaclib_getEnableDiffCorrection(void* const hCroPaC)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
     return pData->diffCorrection;
+}
+
+HRIR_PREPROC_OPTIONS hcropaclib_getHRIRsPreProc(void* const hCroPaC)
+{
+    hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
+    return pData->hrirProcMode;
 }
 
 int hcropaclib_getNumEars()

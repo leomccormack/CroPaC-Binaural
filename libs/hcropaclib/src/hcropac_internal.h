@@ -206,6 +206,7 @@ typedef struct _hcropaclib
     float EQ[HYBRID_BANDS];                  /* EQ curve */
     float balance[HYBRID_BANDS];             /* 0: only diffuse, 1: equal, 2: only directional */ 
     int diffCorrection;                      /* 0:disabled, 1: enabled */
+    HRIR_PREPROC_OPTIONS hrirProcMode;       /* see HRIR_PREPROC_OPTIONS */
     int useDefaultHRIRsFLAG;                 /* 1: use default HRIRs in database, 0: use those from SOFA file */
     HCROPAC_CH_ORDER chOrdering;             /* ACN or FuMa */
     HCROPAC_NORM_TYPES norm;                 /* N3D or SN3D */
