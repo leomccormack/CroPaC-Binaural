@@ -66,7 +66,7 @@ void hcropaclib_create
     pData->diffCorrection = 0;
     pData->hrirProcMode = HRIR_PREPROC_ALL;
     pData->covAvgCoeff = 0.75f;
-    pData->anaLimit_hz = 9.5e3f;
+    pData->anaLimit_hz = 18e3f;
     pData->enableRotation = 0;
     pData->yaw = 0.0f;
     pData->pitch = 0.0f;
