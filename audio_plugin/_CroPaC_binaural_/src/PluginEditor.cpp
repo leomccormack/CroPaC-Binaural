@@ -31,87 +31,52 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     addAndMakeVisible (TBuseDefaultHRIRs.get());
     TBuseDefaultHRIRs->setButtonText (juce::String());
     TBuseDefaultHRIRs->addListener (this);
-
     TBuseDefaultHRIRs->setBounds (614, 60, 21, 24);
 
     CBchFormat = std::make_unique<ComboBoxWithAttachment>(p.parameters, "channelOrder");
     addAndMakeVisible (CBchFormat.get());
     CBchFormat->setEditableText (false);
     CBchFormat->setJustificationType (juce::Justification::centredLeft);
-    CBchFormat->addListener (this);
-
     CBchFormat->setBounds (280, 98, 73, 20);
 
     CBnormScheme = std::make_unique<ComboBoxWithAttachment>(p.parameters, "normType");
     addAndMakeVisible (CBnormScheme.get());
     CBnormScheme->setEditableText (false);
     CBnormScheme->setJustificationType (juce::Justification::centredLeft);
-    CBnormScheme->addListener (this);
-
     CBnormScheme->setBounds (357, 98, 73, 20);
 
     TBmaxRE = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableDiffCorrection");
     addAndMakeVisible (TBmaxRE.get());
-    TBmaxRE->setButtonText (juce::String());
-    TBmaxRE->addListener (this);
-
     TBmaxRE->setBounds (192, 96, 22, 24);
 
     s_yaw = std::make_unique<SliderWithAttachment>(p.parameters, "yaw");
     addAndMakeVisible (s_yaw.get());
     s_yaw->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_yaw->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
-    s_yaw->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
-    s_yaw->setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xff5c5d5e));
-    s_yaw->setColour (juce::Slider::textBoxTextColourId, juce::Colours::white);
-    s_yaw->setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0x00ffffff));
-    s_yaw->addListener (this);
-
     s_yaw->setBounds (453, 179, 58, 63);
 
     s_pitch= std::make_unique<SliderWithAttachment>(p.parameters, "pitch");
     addAndMakeVisible (s_pitch.get());
     s_pitch->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_pitch->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
-    s_pitch->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
-    s_pitch->setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xff5c5d5e));
-    s_pitch->setColour (juce::Slider::textBoxTextColourId, juce::Colours::white);
-    s_pitch->setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0x00ffffff));
-    s_pitch->addListener (this);
-
     s_pitch->setBounds (516, 179, 58, 63);
 
     s_roll = std::make_unique<SliderWithAttachment>(p.parameters, "roll");
     addAndMakeVisible (s_roll.get());
     s_roll->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     s_roll->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 58, 15);
-    s_roll->setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xff315b6d));
-    s_roll->setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xff5c5d5e));
-    s_roll->setColour (juce::Slider::textBoxTextColourId, juce::Colours::white);
-    s_roll->setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0x00ffffff));
-    s_roll->addListener (this);
-
     s_roll->setBounds (579, 179, 58, 63);
 
     t_flipYaw = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "flipYaw");
     addAndMakeVisible (t_flipYaw.get());
-    t_flipYaw->setButtonText (juce::String());
-    t_flipYaw->addListener (this);
-
     t_flipYaw->setBounds (483, 243, 23, 24);
 
     t_flipPitch = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "flipPitch");
     addAndMakeVisible (t_flipPitch.get());
-    t_flipPitch->setButtonText (juce::String());
-    t_flipPitch->addListener (this);
-
     t_flipPitch->setBounds (546, 243, 23, 24);
 
     t_flipRoll = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "flipRoll");
     addAndMakeVisible (t_flipRoll.get());
-    t_flipRoll->setButtonText (juce::String());
-    t_flipRoll->addListener (this);
-
     t_flipRoll->setBounds (609, 243, 23, 24);
 
     te_oscport.reset (new juce::TextEditor ("new text editor"));
@@ -122,76 +87,43 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     te_oscport->setScrollbarsShown (true);
     te_oscport->setCaretVisible (false);
     te_oscport->setPopupMenuEnabled (true);
-    te_oscport->setColour (juce::TextEditor::textColourId, juce::Colours::white);
-    te_oscport->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00ffffff));
-    te_oscport->setColour (juce::TextEditor::outlineColourId, juce::Colour (0x6c838080));
     te_oscport->setText (TRANS("9000"));
-
-    te_oscport->setBounds (587, 135, 44, 22);
+    te_oscport->setBounds (587, 137, 44, 18);
 
     TBrpyFlag = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "useRollPitchYaw");
     addAndMakeVisible (TBrpyFlag.get());
-    TBrpyFlag->setButtonText (juce::String());
-    TBrpyFlag->addListener (this);
-
     TBrpyFlag->setBounds (492, 135, 32, 24);
 
     TBenableRotation = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableRotation");
     addAndMakeVisible (TBenableRotation.get());
-    TBenableRotation->setButtonText (juce::String());
-    TBenableRotation->addListener (this);
-
     TBenableRotation->setBounds (575, 113, 22, 24);
 
     s_cov_avg = std::make_unique<SliderWithAttachment>(p.parameters, "covAvgCoeff");
     addAndMakeVisible (s_cov_avg.get());
     s_cov_avg->setSliderStyle (juce::Slider::LinearHorizontal);
     s_cov_avg->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
-    s_cov_avg->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
-    s_cov_avg->setColour (juce::Slider::trackColourId, juce::Colour (0xff315b6d));
-    s_cov_avg->setColour (juce::Slider::textBoxTextColourId, juce::Colours::white);
-    s_cov_avg->setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0x00ffffff));
-    s_cov_avg->addListener (this);
-
     s_cov_avg->setBounds (80, 130, 132, 32);
 
     s_diff2dir = std::make_unique<SliderWithAttachment>(p.parameters, "streamBalance");
     addAndMakeVisible (s_diff2dir.get());
     s_diff2dir->setSliderStyle (juce::Slider::LinearVertical);
     s_diff2dir->setTextBoxStyle (juce::Slider::NoTextBox, false, 80, 20);
-    s_diff2dir->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
-    s_diff2dir->setColour (juce::Slider::trackColourId, juce::Colour (0xff315b6d));
-    s_diff2dir->setColour (juce::Slider::textBoxTextColourId, juce::Colours::white);
-    s_diff2dir->setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0x00ffffff));
     s_diff2dir->addListener (this);
-
-    s_diff2dir->setBounds (387, 183, 40, 74);
+    s_diff2dir->setBounds (386, 179, 40, 80);
 
     s_ana_lim = std::make_unique<SliderWithAttachment>(p.parameters, "anaLimit");
     addAndMakeVisible (s_ana_lim.get());
     s_ana_lim->setSliderStyle (juce::Slider::LinearHorizontal);
-    s_ana_lim->setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
-    s_ana_lim->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff5c5d5e));
-    s_ana_lim->setColour (juce::Slider::trackColourId, juce::Colour (0xff315b6d));
-    s_ana_lim->setColour (juce::Slider::textBoxTextColourId, juce::Colours::white);
-    s_ana_lim->setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0x00ffffff));
-    s_ana_lim->addListener (this);
-
-    s_ana_lim->setBounds (317, 130, 112, 32);
+    s_ana_lim->setTextBoxStyle (juce::Slider::TextBoxRight, false, 74, 20);
+    s_ana_lim->setBounds (283, 130, 146, 32);
 
     TBenableCroPaC = std::make_unique<ToggleButtonWithAttachment>(p.parameters, "enableCroPaC");
     addAndMakeVisible (TBenableCroPaC.get());
-    TBenableCroPaC->setButtonText (juce::String());
-    TBenableCroPaC->addListener (this);
-
     TBenableCroPaC->setBounds (192, 63, 22, 24);
     
     CBhrirPreProc = std::make_unique<ComboBoxWithAttachment>(p.parameters, "hrirPreproc");
     addAndMakeVisible (CBhrirPreProc.get());
     CBhrirPreProc->setEditableText (false);
-    CBhrirPreProc->setJustificationType (juce::Justification::centredLeft);
-    CBhrirPreProc->addListener (this);
-
     CBhrirPreProc->setBounds (312, 65, 118, 20);
 
     setSize (656, 278);
@@ -206,13 +138,17 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 #endif
 
     /* Look and Feel */
-    LAF.setDefaultColours();
     setLookAndFeel(&LAF);
 
     /* file loader */
     addAndMakeVisible (fileChooser);
     fileChooser.addListener (this);
     fileChooser.setBounds (458, 86, 168, 20);
+    StringArray filenames;
+    filenames.add("/Spatial_Audio_Framework/Default");
+    filenames.add(hcropaclib_getSofaFilePath(hCroPaC));
+    fileChooser.setRecentlyUsedFilenames(filenames);
+    fileChooser.setFilenameIsEditable(true);
 
     /* create 2d Sliders */
     int nPoints;
@@ -730,7 +666,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 227, y = 129, width = 125, height = 30;
-        juce::String text (TRANS("Ana Lim (Hz):"));
+        juce::String text (TRANS("Ana Lim:"));
         juce::Colour fillColour = juce::Colours::white;
         g.setColour (fillColour);
         g.setFont (juce::FontOptions (14.00f, juce::Font::plain).withStyle ("Bold"));

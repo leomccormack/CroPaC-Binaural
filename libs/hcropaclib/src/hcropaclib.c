@@ -965,7 +965,7 @@ char* hcropaclib_getSofaFilePath(void* const hCroPaC)
     if(pars->sofa_filepath!=NULL)
         return pars->sofa_filepath;
     else
-        return "no_file";
+        return "/Spatial_Audio_Framework/Default";
 }
 
 int hcropaclib_getChOrder(void* const hCroPaC)

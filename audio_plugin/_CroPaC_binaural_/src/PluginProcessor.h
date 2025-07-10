@@ -88,7 +88,8 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void parameterChanged(const juce::String& parameterID, float newValue) override;
     void setParameterValuesUsingInternalState();
-    
+    void setInternalStateUsingParameterValues();
+
     void timerCallback(int timerID) override {
         switch(timerID){
             case TIMER_PROCESSING_RELATED:

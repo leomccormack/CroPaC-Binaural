@@ -30,7 +30,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     params.push_back(std::make_unique<juce::AudioParameterChoice>("channelOrder", "ChannelOrder", juce::StringArray{"ACN", "FuMa"}, 0));
     params.push_back(std::make_unique<juce::AudioParameterChoice>("normType", "NormType", juce::StringArray{"N3D", "SN3D", "FuMa"}, 1));
     params.push_back(std::make_unique<juce::AudioParameterBool>("enableCroPaC", "EnableCroPaC", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("anaLimit", "AnaLimit", juce::NormalisableRange<float>(HCROPAC_ANA_LIMIT_MIN_VALUE, HCROPAC_ANA_LIMIT_MAX_VALUE, 1.0f), 18e3f, AudioParameterFloatAttributes().withLabel("Hz")));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("anaLimit", "AnaLimit", juce::NormalisableRange<float>(HCROPAC_ANA_LIMIT_MIN_VALUE, HCROPAC_ANA_LIMIT_MAX_VALUE, 1.0f), 18e3f, AudioParameterFloatAttributes().withLabel(" Hz")));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("covAvgCoeff", "CovAvgCoeff", juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.75f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("streamBalance", "StreamBalance", juce::NormalisableRange<float>(0.0f, 2.0f, 0.01f), 1.0f));
     params.push_back(std::make_unique<juce::AudioParameterBool>("enableDiffCorrection", "EnableDiffCorrection", true, AudioParameterBoolAttributes().withAutomatable(false)));
@@ -39,11 +39,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
                                                                   AudioParameterChoiceAttributes().withAutomatable(false)));
     params.push_back(std::make_unique<juce::AudioParameterBool>("enableRotation", "EnableRotation", false));
     params.push_back(std::make_unique<juce::AudioParameterBool>("useRollPitchYaw", "UseRollPitchYaw", false));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("yaw", "Yaw", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f,
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("yaw", "Yaw", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.1f), 0.0f,
                                                                  AudioParameterFloatAttributes().withLabel(juce::String::fromUTF8(u8"°"))));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitch", "Pitch", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f,
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitch", "Pitch", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.1f), 0.0f,
                                                                  AudioParameterFloatAttributes().withLabel(juce::String::fromUTF8(u8"°"))));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("roll", "Roll", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f,
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("roll", "Roll", juce::NormalisableRange<float>(-180.0f, 180.0f, 0.1f), 0.0f,
                                                                  AudioParameterFloatAttributes().withLabel(juce::String::fromUTF8(u8"°"))));
     params.push_back(std::make_unique<juce::AudioParameterBool>("flipYaw", "FlipYaw", false));
     params.push_back(std::make_unique<juce::AudioParameterBool>("flipPitch", "FlipPitch", false));
@@ -122,6 +122,26 @@ void PluginProcessor::setParameterValuesUsingInternalState()
     setParameterValue("flipYaw", hcropaclib_getFlipYaw(hCroPaC));
     setParameterValue("flipPitch", hcropaclib_getFlipPitch(hCroPaC));
     setParameterValue("flipRoll", hcropaclib_getFlipRoll(hCroPaC));
+}
+
+void PluginProcessor::setInternalStateUsingParameterValues()
+{
+    hcropaclib_setChOrder(hCroPaC, getParameterChoice("channelOrder")+1);
+    hcropaclib_setNormType(hCroPaC, getParameterChoice("normType")+1);
+    hcropaclib_setEnableCroPaC(hCroPaC, getParameterBool("enableCroPaC"));
+    hcropaclib_setAnaLimit(hCroPaC, getParameterFloat("anaLimit"));
+    hcropaclib_setCovAvg(hCroPaC, getParameterFloat("covAvgCoeff"));
+    hcropaclib_setBalanceAllBands(hCroPaC, getParameterFloat("streamBalance"));
+    hcropaclib_setEnableDiffCorrection(hCroPaC, getParameterBool("enableDiffCorrection"));
+    hcropaclib_setHRIRsPreProc(hCroPaC, static_cast<HRIR_PREPROC_OPTIONS>(getParameterChoice("hrirPreproc")+1));
+    hcropaclib_setEnableRotation(hCroPaC, getParameterBool("enableRotation"));
+    hcropaclib_setRPYflag(hCroPaC, getParameterBool("useRollPitchYaw"));
+    hcropaclib_setYaw(hCroPaC, getParameterFloat("yaw"));
+    hcropaclib_setPitch(hCroPaC, getParameterFloat("pitch"));
+    hcropaclib_setRoll(hCroPaC, getParameterFloat("roll"));
+    hcropaclib_setFlipYaw(hCroPaC, getParameterBool("flipYaw"));
+    hcropaclib_setFlipPitch(hCroPaC, getParameterBool("flipPitch"));
+    hcropaclib_setFlipRoll(hCroPaC, getParameterBool("flipRoll"));
 }
 
 PluginProcessor::PluginProcessor():
@@ -378,6 +398,10 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                 osc_port_ID = xmlState->getIntAttribute("OSC_PORT", DEFAULT_OSC_PORT);
                 osc.connect(osc_port_ID);
             }
+            
+            /* Many hosts will also trigger parameterChanged() for all parameters after calling setStateInformation() */
+            /* However, some hosts do not. Therefore, it is better to ensure that the internal state is always up-to-date by calling: */
+            setInternalStateUsingParameterValues();
         }
         
         hcropaclib_refreshParams(hCroPaC);
