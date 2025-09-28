@@ -161,7 +161,7 @@ PluginProcessor::PluginProcessor():
     /* tell the component to listen for OSC messages */
     osc.addListener(this);
     
-    startTimer(TIMER_PROCESSING_RELATED, 40);
+    startTimer(40);
 }
 
 PluginProcessor::~PluginProcessor()

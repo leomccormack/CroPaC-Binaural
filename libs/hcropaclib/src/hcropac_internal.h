@@ -102,8 +102,22 @@ typedef enum _HCROPAC_PROC_STATUS{
 #ifndef RAD2DEG
 # define RAD2DEG(x) (x * 180.0f / SAF_PI)
 #endif
+
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) && !defined(__STDC_NO_ATOMICS__)
+  typedef _Atomic HCROPAC_CH_ORDER _Atomic_HCROPAC_CH_ORDER;
+  typedef _Atomic HCROPAC_NORM_TYPES _Atomic_HCROPAC_NORM_TYPES;
+  typedef _Atomic HRIR_PREPROC_OPTIONS _Atomic_HRIR_PREPROC_OPTIONS;
+  typedef _Atomic HCROPAC_CODEC_STATUS _Atomic_HCROPAC_CODEC_STATUS;
+  typedef _Atomic HCROPAC_PROC_STATUS _Atomic_HCROPAC_PROC_STATUS;
+#else
+  typedef HCROPAC_CH_ORDER _Atomic_HCROPAC_CH_ORDER;
+  typedef HCROPAC_NORM_TYPES _Atomic_HCROPAC_NORM_TYPES;
+  typedef HRIR_PREPROC_OPTIONS _Atomic_HRIR_PREPROC_OPTIONS;
+  typedef HCROPAC_CODEC_STATUS _Atomic_HCROPAC_CODEC_STATUS;
+  typedef HCROPAC_PROC_STATUS _Atomic_HCROPAC_PROC_STATUS;
+#endif
     
-    
+
 /* ========================================================================== */
 /*                                 Structures                                 */
 /* ========================================================================== */
@@ -173,8 +187,8 @@ typedef struct _hcropaclib
     float freqVector[HYBRID_BANDS];          /* frequency vector for time-frequency transform, in Hz */
     
     /* our codec configuration */
-    HCROPAC_CODEC_STATUS codecStatus;
-    float progressBar0_1;
+    _Atomic_HCROPAC_CODEC_STATUS codecStatus;
+    _Atomic_FLOAT32 progressBar0_1;
     char* progressBarText;
     codecPars* pars;                         /* codec parameters */
     void* hCdf;                              /* covariance domain framework handle */
@@ -183,7 +197,7 @@ typedef struct _hcropaclib
 #endif
     
     /* internal */
-    HCROPAC_PROC_STATUS procStatus;
+    _Atomic_HCROPAC_PROC_STATUS procStatus;
     float_complex Cx[HYBRID_BANDS][NUM_SH_SIGNALS][NUM_SH_SIGNALS];
     float_complex Cy[HYBRID_BANDS][NUM_EARS][NUM_EARS];
     float_complex Cambi[HYBRID_BANDS][NUM_EARS][NUM_EARS];
@@ -199,23 +213,23 @@ typedef struct _hcropaclib
     float transientDetector2[HYBRID_BANDS][NUM_EARS];
 #endif
     float_complex M_rot[NUM_SH_SIGNALS][NUM_SH_SIGNALS];
-    int recalc_M_rotFLAG;                    /* 0: no init required, 1: init required */
+    _Atomic_INT32 recalc_M_rotFLAG;                  /**< 0: no init required, 1: init required */
     
     /* user parameters */
-    int enableCroPaC;                        /* 0: Ambisonic decoder, 1: CroPaC decoder */
-    float EQ[HYBRID_BANDS];                  /* EQ curve */
-    float balance[HYBRID_BANDS];             /* 0: only diffuse, 1: equal, 2: only directional */ 
-    int diffCorrection;                      /* 0:disabled, 1: enabled */
-    HRIR_PREPROC_OPTIONS hrirProcMode;       /* see HRIR_PREPROC_OPTIONS */
-    int useDefaultHRIRsFLAG;                 /* 1: use default HRIRs in database, 0: use those from SOFA file */
-    HCROPAC_CH_ORDER chOrdering;             /* ACN or FuMa */
-    HCROPAC_NORM_TYPES norm;                 /* N3D or SN3D */
-    float covAvgCoeff;                       /* averaging coefficient for covarience matrix */
-    float anaLimit_hz;                       /* frequency up to which to perform CroPaC analysis, Hz */
-    int enableRotation;                      /* 1: enable rotation, 0: disable */
-    float yaw, roll, pitch;                  /* rotation angles in degrees */
-    int bFlipYaw, bFlipPitch, bFlipRoll;     /* flag to flip the sign of the individual rotation angles */
-    int useRollPitchYawFlag;                 /* rotation order flag, 1: r-p-y, 0: y-p-r */
+    _Atomic_INT32 enableCroPaC;                      /**< 0: Ambisonic decoder, 1: CroPaC decoder */
+    _Atomic_FLOAT32 EQ[HYBRID_BANDS];                /**< EQ curve */
+    _Atomic_FLOAT32 balance[HYBRID_BANDS];           /**< 0: only diffuse, 1: equal, 2: only directional */
+    _Atomic_INT32 diffCorrection;                    /**< 0:disabled, 1: enabled */
+    _Atomic_HRIR_PREPROC_OPTIONS hrirProcMode;       /**< see HRIR_PREPROC_OPTIONS */
+    _Atomic_INT32 useDefaultHRIRsFLAG;               /**< 1: use default HRIRs in database, 0: use those from SOFA file */
+    _Atomic_HCROPAC_CH_ORDER chOrdering;             /**< ACN or FuMa */
+    _Atomic_HCROPAC_NORM_TYPES norm;                 /**< N3D or SN3D */
+    _Atomic_FLOAT32 covAvgCoeff;                     /**< averaging coefficient for covarience matrix */
+    _Atomic_FLOAT32 anaLimit_hz;                     /**< frequency up to which to perform CroPaC analysis, Hz */
+    _Atomic_INT32 enableRotation;                    /**< 1: enable rotation, 0: disable */
+    _Atomic_FLOAT32 yaw, roll, pitch;                /**< rotation angles in degrees */
+    _Atomic_INT32 bFlipYaw, bFlipPitch, bFlipRoll;   /**< flag to flip the sign of the individual rotation angles */
+    _Atomic_INT32 useRollPitchYawFlag;               /**< rotation order flag, 1: r-p-y, 0: y-p-r */
     
 } hcropaclib_data;
 

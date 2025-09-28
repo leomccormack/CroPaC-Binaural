@@ -28,6 +28,8 @@
 #include "hcropaclib.h"
 #include <string.h>
 #include <thread>
+#include <atomic>
+
 #define BUILD_VER_SUFFIX ""            /* String to be added before the version name on the GUI (e.g. beta, alpha etc..) */
 #define MAX_NUM_CHANNELS 64
 #define DEFAULT_OSC_PORT 9000
@@ -38,13 +40,8 @@
 # define MAX(a,b) (( (a) > (b) ) ? (a) : (b))
 #endif
 
-typedef enum _TIMERS{
-    TIMER_PROCESSING_RELATED = 1,
-    TIMER_GUI_RELATED
-}TIMERS;
-
 class PluginProcessor  : public AudioProcessor,
-                         public MultiTimer,
+                         public Timer,
                          private OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
                          public VST2ClientExtensions,
                          public ParameterManager
@@ -77,11 +74,11 @@ public:
     int getOscPortID(){ return osc_port_ID; }
     
 private:
-    void* hCroPaC;       /* hcropaclib handle */
-    int nNumInputs;      /* current number of input channels */
-    int nNumOutputs;     /* current number of output channels */
-    int nSampleRate;     /* current host sample rate */
-    int nHostBlockSize;  /* typical host block size to expect, in samples */
+    void* hCroPaC;                    /* hcropaclib handle */
+    std::atomic<int> nNumInputs;      /* current number of input channels */
+    std::atomic<int> nNumOutputs;     /* current number of output channels */
+    int nSampleRate;                  /* current host sample rate */
+    std::atomic<int> nHostBlockSize;  /* typical host block size to expect, in samples */
     OSCReceiver osc;
     int osc_port_ID;
     
@@ -90,23 +87,15 @@ private:
     void setParameterValuesUsingInternalState();
     void setInternalStateUsingParameterValues();
 
-    void timerCallback(int timerID) override {
-        switch(timerID){
-            case TIMER_PROCESSING_RELATED:
-                /* reinitialise codec if needed */
-                if(hcropaclib_getCodecStatus(hCroPaC) == CODEC_STATUS_NOT_INITIALISED){
-                    try{
-                        std::thread threadInit(hcropaclib_initCodec, hCroPaC);
-                        threadInit.detach();
-                    } catch (const std::exception& exception) {
-                        std::cout << "Could not create thread" << exception.what() << std::endl;
-                    }
-                }
-                break;
-                
-            case TIMER_GUI_RELATED:
-                /* handled in PluginEditor; */
-                break;
+    void timerCallback() override {
+        /* reinitialise codec if needed */
+        if(hcropaclib_getCodecStatus(hCroPaC) == CODEC_STATUS_NOT_INITIALISED){
+            try{
+                std::thread threadInit(hcropaclib_initCodec, hCroPaC);
+                threadInit.detach();
+            } catch (const std::exception& exception) {
+                std::cout << "Could not create thread" << exception.what() << std::endl;
+            }
         }
     }
     

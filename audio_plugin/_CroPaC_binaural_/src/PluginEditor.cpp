@@ -210,7 +210,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     progressbar.setColour(ProgressBar::foregroundColourId, Colours::white);
 
 	/* Specify screen refresh rate */
-    startTimer(TIMER_GUI_RELATED, 20);
+    startTimer(20);
 
     /* warnings */
     currentWarning = k_warning_none;
@@ -787,82 +787,73 @@ void PluginEditor::sliderValueChanged (juce::Slider* sliderThatWasMoved)
     }
 }
 
-void PluginEditor::timerCallback(int timerID)
+void PluginEditor::timerCallback()
 {
-    switch(timerID){
-        case TIMER_PROCESSING_RELATED:
-            /* Handled in PluginProcessor */
-            break;
+    /* parameters whos values can change internally should be periodically refreshed */
+    TBuseDefaultHRIRs->setToggleState(hcropaclib_getUseDefaultHRIRsflag(hCroPaC), dontSendNotification);
 
-        case TIMER_GUI_RELATED:
-
-            /* parameters whos values can change internally should be periodically refreshed */
-            TBuseDefaultHRIRs->setToggleState(hcropaclib_getUseDefaultHRIRsflag(hCroPaC), dontSendNotification);
-
-            /* Progress bar */
-            if(hcropaclib_getCodecStatus(hCroPaC)==CODEC_STATUS_INITIALISING){
-                addAndMakeVisible(progressbar);
-                progress = (double)hcropaclib_getProgressBar0_1(hCroPaC);
-                char text[HCROPAC_PROGRESSBARTEXT_CHAR_LENGTH];
-                hcropaclib_getProgressBarText(hCroPaC, (char*)text);
-                progressbar.setTextToDisplay(String(text));
-            }
-            else
-                removeChildComponent(&progressbar);
-
-            /* Some parameters shouldn't be editable during initialisation*/
-            if(hcropaclib_getCodecStatus(hCroPaC)==CODEC_STATUS_INITIALISING){
-                if(fileChooser.isEnabled())
-                    fileChooser.setEnabled(false);
-                if(TBuseDefaultHRIRs->isEnabled())
-                    TBuseDefaultHRIRs->setEnabled(false);
-                if(TBmaxRE->isEnabled())
-                    TBmaxRE->setEnabled(false);
-            }
-            else {
-                if(!fileChooser.isEnabled())
-                    fileChooser.setEnabled(true);
-                if(!TBuseDefaultHRIRs->isEnabled())
-                    TBuseDefaultHRIRs->setEnabled(true);
-                if(!TBmaxRE->isEnabled())
-                    TBmaxRE->setEnabled(true);
-            }
-
-            /* refresh 2d slider */
-            if (balance2dSlider->getRefreshValuesFLAG()){
-                balance2dSlider->repaint();
-                balance2dSlider->setRefreshValuesFLAG(false);
-            }
-
-            /* display warning message, if needed */
-            if ((processor.getCurrentBlockSize() % hcropaclib_getFrameSize()) != 0){
-                currentWarning = k_warning_frameSize;
-                repaint(0,0,getWidth(),32);
-            }
-            else if ( !((hcropaclib_getDAWsamplerate(hCroPaC) == 44.1e3) || (hcropaclib_getDAWsamplerate(hCroPaC) == 48e3)) ){
-                currentWarning = k_warning_supported_fs;
-                repaint(0,0,getWidth(),32);
-            }
-            else if (hcropaclib_getDAWsamplerate(hCroPaC) != hcropaclib_getHRIRsamplerate(hCroPaC)){
-                currentWarning = k_warning_mismatch_fs;
-                repaint(0,0,getWidth(),32);
-            }
-            else if ((processor.getCurrentNumInputs() < hcropaclib_getNSHrequired())){
-                currentWarning = k_warning_NinputCH;
-                repaint(0,0,getWidth(),32);
-            }
-            else if ((processor.getCurrentNumOutputs() < hcropaclib_getNumEars())){
-                currentWarning = k_warning_NoutputCH;
-                repaint(0,0,getWidth(),32);
-            }
-            else if(currentWarning){
-                currentWarning = k_warning_none;
-                repaint(0,0,getWidth(),32);
-            }
-
-            /* check if OSC port has changed */
-            if(processor.getOscPortID() != te_oscport->getText().getIntValue())
-                processor.setOscPortID(te_oscport->getText().getIntValue());
-            break;
+    /* Progress bar */
+    if(hcropaclib_getCodecStatus(hCroPaC)==CODEC_STATUS_INITIALISING){
+        addAndMakeVisible(progressbar);
+        progress = (double)hcropaclib_getProgressBar0_1(hCroPaC);
+        char text[HCROPAC_PROGRESSBARTEXT_CHAR_LENGTH];
+        hcropaclib_getProgressBarText(hCroPaC, (char*)text);
+        progressbar.setTextToDisplay(String(text));
     }
+    else
+        removeChildComponent(&progressbar);
+
+    /* Some parameters shouldn't be editable during initialisation*/
+    if(hcropaclib_getCodecStatus(hCroPaC)==CODEC_STATUS_INITIALISING){
+        if(fileChooser.isEnabled())
+            fileChooser.setEnabled(false);
+        if(TBuseDefaultHRIRs->isEnabled())
+            TBuseDefaultHRIRs->setEnabled(false);
+        if(TBmaxRE->isEnabled())
+            TBmaxRE->setEnabled(false);
+    }
+    else {
+        if(!fileChooser.isEnabled())
+            fileChooser.setEnabled(true);
+        if(!TBuseDefaultHRIRs->isEnabled())
+            TBuseDefaultHRIRs->setEnabled(true);
+        if(!TBmaxRE->isEnabled())
+            TBmaxRE->setEnabled(true);
+    }
+
+    /* refresh 2d slider */
+    if (balance2dSlider->getRefreshValuesFLAG()){
+        balance2dSlider->repaint();
+        balance2dSlider->setRefreshValuesFLAG(false);
+    }
+
+    /* display warning message, if needed */
+    if ((processor.getCurrentBlockSize() % hcropaclib_getFrameSize()) != 0){
+        currentWarning = k_warning_frameSize;
+        repaint(0,0,getWidth(),32);
+    }
+    else if ( !((hcropaclib_getDAWsamplerate(hCroPaC) == 44.1e3) || (hcropaclib_getDAWsamplerate(hCroPaC) == 48e3)) ){
+        currentWarning = k_warning_supported_fs;
+        repaint(0,0,getWidth(),32);
+    }
+    else if (hcropaclib_getDAWsamplerate(hCroPaC) != hcropaclib_getHRIRsamplerate(hCroPaC)){
+        currentWarning = k_warning_mismatch_fs;
+        repaint(0,0,getWidth(),32);
+    }
+    else if ((processor.getCurrentNumInputs() < hcropaclib_getNSHrequired())){
+        currentWarning = k_warning_NinputCH;
+        repaint(0,0,getWidth(),32);
+    }
+    else if ((processor.getCurrentNumOutputs() < hcropaclib_getNumEars())){
+        currentWarning = k_warning_NoutputCH;
+        repaint(0,0,getWidth(),32);
+    }
+    else if(currentWarning){
+        currentWarning = k_warning_none;
+        repaint(0,0,getWidth(),32);
+    }
+
+    /* check if OSC port has changed */
+    if(processor.getOscPortID() != te_oscport->getText().getIntValue())
+        processor.setOscPortID(te_oscport->getText().getIntValue());
 }

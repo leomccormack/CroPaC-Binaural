@@ -936,7 +936,7 @@ void hcropaclib_getBalanceHandle
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
     (*pX_vector) = &pData->freqVector[0];
-    (*pY_values) = &pData->balance[0];
+    (*pY_values) = (float*)&pData->balance[0];
     (*pNpoints) = HYBRID_BANDS;
 } 
 

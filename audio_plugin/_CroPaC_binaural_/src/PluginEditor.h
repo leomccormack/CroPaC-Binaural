@@ -38,7 +38,7 @@ typedef enum _CroPaC_WARNINGS{
 }CroPaC_WARNINGS;
 
 class PluginEditor  : public AudioProcessorEditor,
-                      public MultiTimer,
+                      public Timer,
                       private FilenameComponentListener,
                       public juce::Button::Listener,
                       public juce::ComboBox::Listener,
@@ -57,7 +57,7 @@ public:
 private:
     PluginProcessor& processor;
     void* hCroPaC;
-    void timerCallback(int timerID) override;
+    void timerCallback() override;
 #ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
