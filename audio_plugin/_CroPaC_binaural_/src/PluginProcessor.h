@@ -66,12 +66,26 @@ public:
     
     /* OSC */
     void oscMessageReceived(const OSCMessage& message) override;
+    void checkAndUpdateOscStatus(){
+        /* Free up the port if osc is connected and rotation is disabled */
+        if(!hcropaclib_getEnableRotation(hCroPaC) && osc_connected){
+            osc_connected = false;
+            osc.disconnect();
+        }
+        /* Try to connect to port if rotation is enabled */
+        else if(hcropaclib_getEnableRotation(hCroPaC) && !osc_connected)
+            osc_connected = osc.connect(osc_port_ID);
+    }
     void setOscPortID(int newID){
-        osc.disconnect();
         osc_port_ID = newID;
-        osc.connect(osc_port_ID);
+        if(hcropaclib_getEnableRotation(hCroPaC)){
+            if(osc_connected)
+                osc.disconnect();
+            osc_connected = osc.connect(osc_port_ID);
+        }
     }
     int getOscPortID(){ return osc_port_ID; }
+    bool getOscPortConnected(){ return osc_connected; }
     
 private:
     void* hCroPaC;                    /* hcropaclib handle */
@@ -80,8 +94,9 @@ private:
     int nSampleRate;                  /* current host sample rate */
     std::atomic<int> nHostBlockSize;  /* typical host block size to expect, in samples */
     OSCReceiver osc;
-    int osc_port_ID;
-    
+    bool osc_connected = false;
+    int osc_port_ID = DEFAULT_OSC_PORT;
+
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void parameterChanged(const juce::String& parameterID, float newValue) override;
     void setParameterValuesUsingInternalState();

@@ -723,40 +723,45 @@ void PluginEditor::paint (juce::Graphics& g)
 		Justification::centredLeft, true);
 
     /* display warning message */
-    g.setColour(Colours::red);
     g.setFont(juce::FontOptions (11.00f, Font::plain));
     switch (currentWarning){
         case k_warning_none:
             break;
         case k_warning_frameSize:
+            g.setColour(Colours::red);
             g.drawText(TRANS("Set frame size to multiple of ") + String(hcropaclib_getFrameSize()),
                        getBounds().getWidth()-225, 16, 530, 11,
                        Justification::centredLeft, true);
             break;
-        case k_warning_supported_fs:
-            g.drawText(TRANS("Sample rate (") + String(hcropaclib_getDAWsamplerate(hCroPaC)) + TRANS(") is unsupported"),
-                       getBounds().getWidth()-225, 16, 530, 11,
-                       Justification::centredLeft, true);
-            break;
-        case k_warning_mismatch_fs:
-            g.drawText(TRANS("Sample rate mismatch between DAW/HRIRs"),
-                       getBounds().getWidth()-225, 16, 530, 11,
-                       Justification::centredLeft, true);
-            break;
         case k_warning_NinputCH:
+            g.setColour(Colours::red);
             g.drawText(TRANS("Insufficient number of input channels (") + String(processor.getTotalNumInputChannels()) +
                        TRANS("/") + String(hcropaclib_getNSHrequired()) + TRANS(")"),
                        getBounds().getWidth()-225, 16, 530, 11,
                        Justification::centredLeft, true);
             break;
         case k_warning_NoutputCH:
+            g.setColour(Colours::red);
             g.drawText(TRANS("Insufficient number of output channels (") + String(processor.getTotalNumOutputChannels()) +
                        TRANS("/") + String(hcropaclib_getNumEars()) + TRANS(")"),
                        getBounds().getWidth()-225, 16, 530, 11,
                        Justification::centredLeft, true);
             break;
         case k_warning_osc_connection_fail:
+            g.setColour(Colours::red);
             g.drawText(TRANS("OSC failed to connect, or port is already taken"),
+                       getBounds().getWidth()-225, 16, 530, 11,
+                       Justification::centredLeft, true);
+            break;
+        case k_warning_supported_fs:
+            g.setColour(Colours::yellow);
+            g.drawText(TRANS("Sample rate \"") + String(hcropaclib_getDAWsamplerate(hCroPaC)) + TRANS("\" is not recommended"),
+                       getBounds().getWidth()-225, 16, 530, 11,
+                       Justification::centredLeft, true);
+            break;
+        case k_warning_mismatch_fs:
+            g.setColour(Colours::yellow);
+            g.drawText(TRANS("Resampled HRIRs to match host samplerate"),
                        getBounds().getWidth()-225, 16, 530, 11,
                        Justification::centredLeft, true);
             break;
@@ -832,20 +837,24 @@ void PluginEditor::timerCallback()
         currentWarning = k_warning_frameSize;
         repaint(0,0,getWidth(),32);
     }
-    else if ( !((hcropaclib_getDAWsamplerate(hCroPaC) == 44.1e3) || (hcropaclib_getDAWsamplerate(hCroPaC) == 48e3)) ){
-        currentWarning = k_warning_supported_fs;
-        repaint(0,0,getWidth(),32);
-    }
-    else if (hcropaclib_getDAWsamplerate(hCroPaC) != hcropaclib_getHRIRsamplerate(hCroPaC)){
-        currentWarning = k_warning_mismatch_fs;
-        repaint(0,0,getWidth(),32);
-    }
     else if ((processor.getCurrentNumInputs() < hcropaclib_getNSHrequired())){
         currentWarning = k_warning_NinputCH;
         repaint(0,0,getWidth(),32);
     }
     else if ((processor.getCurrentNumOutputs() < hcropaclib_getNumEars())){
         currentWarning = k_warning_NoutputCH;
+        repaint(0,0,getWidth(),32);
+    }
+    else if(!processor.getOscPortConnected() && hcropaclib_getEnableRotation(hCroPaC)){
+        currentWarning = k_warning_osc_connection_fail;
+        repaint(0,0,getWidth(),32);
+    }
+    else if ( !((hcropaclib_getDAWsamplerate(hCroPaC) == 44.1e3) || (hcropaclib_getDAWsamplerate(hCroPaC) == 48e3)) ){
+        currentWarning = k_warning_supported_fs;
+        repaint(0,0,getWidth(),32);
+    }
+    else if (hcropaclib_getDAWsamplerate(hCroPaC) != hcropaclib_getHRIRsamplerate(hCroPaC)){
+        currentWarning = k_warning_mismatch_fs;
         repaint(0,0,getWidth(),32);
     }
     else if(currentWarning){

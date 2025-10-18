@@ -53,6 +53,8 @@ void hcropaclib_create
     hcropaclib_data* pData = (hcropaclib_data*)malloc1d(sizeof(hcropaclib_data));
     *phCroPaC = (void*)pData;
     int band;
+    
+    pData->fs = 48000;
 
     /* default user parameters */
     pData->enableCroPaC = 1;
@@ -90,7 +92,8 @@ void hcropaclib_create
     pData->progressBarText = malloc1d(HCROPAC_PROGRESSBARTEXT_CHAR_LENGTH*sizeof(char));
     strcpy(pData->progressBarText,"");
     pData->pars = (codecPars*)malloc1d(sizeof(codecPars));
-    codecPars* pars = pData->pars; 
+    codecPars* pars = pData->pars;
+    pars->hrir_orig_fs = __default_hrir_fs;
     pars->sofa_filepath = NULL;
     pars->hrirs = NULL;
     pars->hrir_dirs_deg = NULL;
@@ -173,7 +176,10 @@ void hcropaclib_init
     int t;
     
     /* define frequency vector */
-    pData->fs = sampleRate;
+    if(pData->fs != sampleRate){
+        pData->fs = sampleRate;
+        hcropaclib_setCodecStatus(hCroPaC, CODEC_STATUS_NOT_INITIALISED);
+    }
     afSTFT_getCentreFreqs(pData->hSTFT, (float)sampleRate, HYBRID_BANDS, pData->freqVector);
     
     /* default starting values */
@@ -267,11 +273,30 @@ void hcropaclib_initCodec
         memcpy(pars->hrir_dirs_deg, (float*)__default_hrir_dirs_deg, pars->N_hrir_dirs*2*sizeof(float));
     }
     
+    /* Resample HRIRs if needed */
+    pars->hrir_orig_fs = pars->hrir_fs;
+    if(pars->hrir_fs!=pData->fs){
+        strcpy(pData->progressBarText, "Resampling HRIRs");
+        pData->progressBar0_1 = 0.4f;
+        float* hrirs_resampled;
+        int hrir_length_resample;
+        resampleHRIRs(pars->hrirs, pars->N_hrir_dirs, pars->hrir_len, pars->hrir_fs, pData->fs, 1, &hrirs_resampled, &hrir_length_resample);
+        
+        /* Replace with resampled HRIRs */
+        pars->hrir_fs = pData->fs;
+        pars->hrir_len = hrir_length_resample;
+        pars->hrirs = realloc1d(pars->hrirs, pars->N_hrir_dirs*NUM_EARS*(pars->hrir_len)*sizeof(float));
+        memcpy(pars->hrirs, hrirs_resampled, pars->N_hrir_dirs*NUM_EARS*(pars->hrir_len)*sizeof(float));
+        
+        /* Clean-up */
+        free(hrirs_resampled);
+    }
+    
     /* estimate the ITDs for each HRIR */
     pars->itds_s = realloc1d(pars->itds_s, pars->N_hrir_dirs*sizeof(float));
     estimateITDs(pars->hrirs, pars->N_hrir_dirs, pars->hrir_len, pars->hrir_fs, pars->itds_s);
     
-    pData->progressBar0_1 = 0.4f;
+    pData->progressBar0_1 = 0.6f;
     
     /* convert hrirs to filterbank coefficients */
     pars->hrtf_fb = realloc1d(pars->hrtf_fb, HYBRID_BANDS * NUM_EARS * (pars->N_hrir_dirs)*sizeof(float_complex));
@@ -1080,7 +1105,7 @@ int hcropaclib_getHRIRsamplerate(void* const hCroPaC)
 {
     hcropaclib_data *pData = (hcropaclib_data*)(hCroPaC);
     codecPars* pars = pData->pars;
-    return pars->hrir_fs;
+    return pars->hrir_orig_fs;
 }
 
 int hcropaclib_getDAWsamplerate(void* const hCroPaC)

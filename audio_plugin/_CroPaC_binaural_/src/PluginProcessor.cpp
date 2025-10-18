@@ -80,6 +80,7 @@ void PluginProcessor::parameterChanged(const juce::String& parameterID, float ne
     }
     else if (parameterID == "enableRotation"){
         hcropaclib_setEnableRotation(hCroPaC, static_cast<int>(newValue+0.5f));
+        checkAndUpdateOscStatus();
     }
     else if(parameterID == "useRollPitchYaw"){
         hcropaclib_setRPYflag(hCroPaC, static_cast<int>(newValue+0.5f));
@@ -122,6 +123,8 @@ void PluginProcessor::setParameterValuesUsingInternalState()
     setParameterValue("flipYaw", hcropaclib_getFlipYaw(hCroPaC));
     setParameterValue("flipPitch", hcropaclib_getFlipPitch(hCroPaC));
     setParameterValue("flipRoll", hcropaclib_getFlipRoll(hCroPaC));
+    
+    checkAndUpdateOscStatus();
 }
 
 void PluginProcessor::setInternalStateUsingParameterValues()
@@ -142,6 +145,8 @@ void PluginProcessor::setInternalStateUsingParameterValues()
     hcropaclib_setFlipYaw(hCroPaC, getParameterBool("flipYaw"));
     hcropaclib_setFlipPitch(hCroPaC, getParameterBool("flipPitch"));
     hcropaclib_setFlipRoll(hCroPaC, getParameterBool("flipRoll"));
+    
+    checkAndUpdateOscStatus();
 }
 
 PluginProcessor::PluginProcessor():
@@ -152,21 +157,19 @@ PluginProcessor::PluginProcessor():
 {
 	hcropaclib_create(&hCroPaC);
     
+    /* OSC */
+    osc.addListener(this);
+    
     /* Grab defaults */
     setParameterValuesUsingInternalState();
-    
-    /* specify here on which UDP port number to receive incoming OSC messages */
-    osc_port_ID = DEFAULT_OSC_PORT;
-     osc.connect(osc_port_ID);
-    /* tell the component to listen for OSC messages */
-    osc.addListener(this);
     
     startTimer(40);
 }
 
 PluginProcessor::~PluginProcessor()
 {
-    osc.disconnect();
+    if(osc_connected)
+        osc.disconnect();
     osc.removeListener(this);
     
 	hcropaclib_destroy(&hCroPaC);

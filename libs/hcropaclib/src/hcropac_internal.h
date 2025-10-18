@@ -133,20 +133,21 @@ typedef struct _codecPars
     float_complex M_dec_norm[HYBRID_BANDS][NUM_EARS][NUM_SH_SIGNALS];
     
     /* sofa file data */
-    char* sofa_filepath;               /* absolute/relevative file path for a sofa file */
-    float* hrirs;                      /* time domain HRIRs; N_hrir_dirs x 2 x hrir_len */
-    float* hrir_dirs_deg;              /* directions of the HRIRs in degrees [azi elev]; N_hrir_dirs x 2 */
-    int N_hrir_dirs;                   /* number of HRIR directions in the current sofa file */
-    int hrir_len;                      /* length of the HRIRs, this can be truncated, see "saf_sofa_reader.h" */
-    int hrir_fs;                       /* sampling rate of the HRIRs, should ideally match the host sampling rate, although not required */
+    char* sofa_filepath;               /**< absolute/relevative file path for a sofa file */
+    float* hrirs;                      /**< time domain HRIRs; N_hrir_dirs x 2 x hrir_len */
+    float* hrir_dirs_deg;              /**< directions of the HRIRs in degrees [azi elev]; N_hrir_dirs x 2 */
+    int N_hrir_dirs;                   /**< number of HRIR directions in the current sofa file */
+    int hrir_len;                      /**< length of the HRIRs, this can be truncated, see "saf_sofa_reader.h" */
+    _Atomic_INT32 hrir_orig_fs;        /**< Can be different from hrir_fs if HRIRs were resampled */
+    int hrir_fs;                       /**< sampling rate of the HRIRs, should ideally match the host sampling rate, although not required */
     int N_Tri;
     
     /* hrir filterbank coefficients */
-    float* itds_s;                     /* interaural-time differences for each HRIR (in seconds); N_hrirs x 1 */
-    float_complex* hrtf_fb;            /* HRTF filterbank coeffs; HYBRID_BANDS x 2 x N_hrir_dirs  */
-    float* hrtf_fb_mag;                /* abs(HRTF filterbank coeffs); HYBRID_BANDS x 2 x N_hrir_dirs */
+    float* itds_s;                     /**< interaural-time differences for each HRIR (in seconds); N_hrirs x 1 */
+    float_complex* hrtf_fb;            /**< HRTF filterbank coeffs; HYBRID_BANDS x 2 x N_hrir_dirs  */
+    float* hrtf_fb_mag;                /**< abs(HRTF filterbank coeffs); HYBRID_BANDS x 2 x N_hrir_dirs */
 #ifdef ENABLE_BINAURAL_DIFF_COH
-    float binDiffuseCoh[HYBRID_BANDS]; /* binaural diffuse coherence per band; HYBRID_BANDS x 1 */
+    float binDiffuseCoh[HYBRID_BANDS]; /**< binaural diffuse coherence per band; HYBRID_BANDS x 1 */
 #endif
     
     /* for interpolation of HRTFs */ 
@@ -158,12 +159,12 @@ typedef struct _codecPars
     int el_res;
     
     /* scanning grid */
-    float* grid_dirs_deg;              /* grid_nDirs x 2 */
+    float* grid_dirs_deg;              /**< grid_nDirs x 2 */
     int grid_nDirs;
-    float_complex* pwdmap_cmplx;       /* TIME_SLOTS x grid_nDirs */
-    float* Y_grid;                     /* NUM_SH_SIGNALS x grid_nDirs */
-    float_complex* Y_grid_cmplx;       /* NUM_SH_SIGNALS x grid_nDirs */
-    float_complex* M_rot;              /* grid_nDirs * NUM_SH_SIGNALS * NUM_SH_SIGNALS */
+    float_complex* pwdmap_cmplx;       /**< TIME_SLOTS x grid_nDirs */
+    float* Y_grid;                     /**< NUM_SH_SIGNALS x grid_nDirs */
+    float_complex* Y_grid_cmplx;       /**< NUM_SH_SIGNALS x grid_nDirs */
+    float_complex* M_rot;              /**< grid_nDirs * NUM_SH_SIGNALS * NUM_SH_SIGNALS */
     
 }codecPars;
 
@@ -181,19 +182,19 @@ typedef struct _hcropaclib
     float_complex*** ambiframeTF;
     float_complex*** binframeTF;
     float interpolator[TIME_SLOTS];
-    void* hSTFT;                             /* afSTFT handle */
-    int afSTFTdelay;                         /* for host delay compensation */
-    int fs;                                  /* host sampling rate */
-    float freqVector[HYBRID_BANDS];          /* frequency vector for time-frequency transform, in Hz */
+    void* hSTFT;                             /**< afSTFT handle */
+    int afSTFTdelay;                         /**< for host delay compensation */
+    int fs;                                  /**< host sampling rate */
+    float freqVector[HYBRID_BANDS];          /**< frequency vector for time-frequency transform, in Hz */
     
     /* our codec configuration */
     _Atomic_HCROPAC_CODEC_STATUS codecStatus;
     _Atomic_FLOAT32 progressBar0_1;
     char* progressBarText;
-    codecPars* pars;                         /* codec parameters */
-    void* hCdf;                              /* covariance domain framework handle */
+    codecPars* pars;                         /**< codec parameters */
+    void* hCdf;                              /**< covariance domain framework handle */
 #ifdef ENABLE_RESIDUAL_STREAM
-    void* hCdf_res;                          /* covariance domain framework handle for the residual */
+    void* hCdf_res;                          /**< covariance domain framework handle for the residual */
 #endif
     
     /* internal */
