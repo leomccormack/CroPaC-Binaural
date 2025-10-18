@@ -55,6 +55,7 @@ void hcropaclib_create
     int band;
     
     pData->fs = 48000;
+    pData->firstInit = 1;
 
     /* default user parameters */
     pData->enableCroPaC = 1;
@@ -176,9 +177,10 @@ void hcropaclib_init
     int t;
     
     /* define frequency vector */
-    if(pData->fs != sampleRate){
+    if(pData->fs != sampleRate || pData->firstInit){
         pData->fs = sampleRate;
         hcropaclib_setCodecStatus(hCroPaC, CODEC_STATUS_NOT_INITIALISED);
+        pData->firstInit = 0;
     }
     afSTFT_getCentreFreqs(pData->hSTFT, (float)sampleRate, HYBRID_BANDS, pData->freqVector);
     
