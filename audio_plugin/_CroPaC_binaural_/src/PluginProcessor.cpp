@@ -23,6 +23,10 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#if JucePlugin_Build_AAX && !JucePlugin_AAXDisableDefaultSettingsChunks
+# error "AAX Default Settings Chunk is enabled. This may override parameter defaults."
+#endif
+
 juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
@@ -35,7 +39,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     params.push_back(std::make_unique<juce::AudioParameterFloat>("streamBalance", "StreamBalance", juce::NormalisableRange<float>(0.0f, 2.0f, 0.01f), 1.0f));
     params.push_back(std::make_unique<juce::AudioParameterBool>("enableDiffCorrection", "EnableDiffCorrection", true, AudioParameterBoolAttributes().withAutomatable(false)));
     params.push_back(std::make_unique<juce::AudioParameterChoice>("hrirPreproc", "HRIRPreproc",
-                                                                  juce::StringArray{"Off","Diffuse-field EQ","Phase Simplification","EQ & Phase"}, 1,
+                                                                  juce::StringArray{"Off","Diffuse-field EQ","Phase Simplification","EQ & Phase"}, 3,
                                                                   AudioParameterChoiceAttributes().withAutomatable(false)));
     params.push_back(std::make_unique<juce::AudioParameterBool>("enableRotation", "EnableRotation", false));
     params.push_back(std::make_unique<juce::AudioParameterBool>("useRollPitchYaw", "UseRollPitchYaw", false));
