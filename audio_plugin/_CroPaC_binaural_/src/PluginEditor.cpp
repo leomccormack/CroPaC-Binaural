@@ -143,7 +143,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     /* file loader */
     addAndMakeVisible (fileChooser);
     fileChooser.addListener (this);
-    fileChooser.setBounds (458, 86, 168, 20);
+    fileChooser.setBounds (458, 86, 174, 20);
     StringArray filenames;
     filenames.add("/Spatial_Audio_Framework/Default");
     filenames.add(hcropaclib_getSofaFilePath(hCroPaC));
