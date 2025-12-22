@@ -41,9 +41,10 @@ endif()
 option(JUCE_BUILD_EXTRAS   "Build JUCE Extras"   OFF)
 option(JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
 
-# Disable SAF tests, but enable SAF examples:
+# Disable SAF tests and examples, and enable sofa reader module:
 option(SAF_BUILD_TESTS    "Build SAF unit tests." OFF)
 option(SAF_BUILD_EXAMPLES "Build SAF examples."   OFF)
+option(SAF_ENABLE_SOFA_READER_MODULE "(Required) saf_sofa_reader module" ON)  
 
 # Add JUCE, Spatial_Audio_Framework, and VST2_SDK to the project
 add_subdirectory(SDKs) 

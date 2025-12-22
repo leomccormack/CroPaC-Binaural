@@ -159,13 +159,11 @@ PluginProcessor::PluginProcessor():
         .withOutput("Output", AudioChannelSet::discreteChannels(2), true)),
     ParameterManager(*this, createParameterLayout())
 {
-	hcropaclib_create(&hCroPaC);
+    hcropaclib_create(&hCroPaC);
+    addParameterListeners(this);
     
     /* OSC */
     osc.addListener(this);
-    
-    /* Grab defaults */
-    setParameterValuesUsingInternalState();
     
     startTimer(40);
 }
@@ -176,7 +174,8 @@ PluginProcessor::~PluginProcessor()
         osc.disconnect();
     osc.removeListener(this);
     
-	hcropaclib_destroy(&hCroPaC);
+    removeParameterListeners(this);
+    hcropaclib_destroy(&hCroPaC);
 }
 
 void PluginProcessor::oscMessageReceived(const OSCMessage& message)
@@ -260,12 +259,17 @@ void PluginProcessor::changeProgramName (int /*index*/, const String& /*newName*
 
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    if(firstInit){
+        /* Need to grab defaults */
+        setParameterValuesUsingInternalState();
+        firstInit = false;
+    }
     nHostBlockSize = samplesPerBlock;
     nNumInputs =  jmin(getTotalNumInputChannels(), 256);
     nNumOutputs = jmin(getTotalNumOutputChannels(), 256);
     nSampleRate = (int)(sampleRate + 0.5);
 
-	hcropaclib_init(hCroPaC, nSampleRate);
+    hcropaclib_init(hCroPaC, nSampleRate);
     AudioProcessor::setLatencySamples(hcropaclib_getProcessingDelay());
 }
 

@@ -209,7 +209,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     progressbar.setColour(ProgressBar::backgroundColourId, Colours::gold);
     progressbar.setColour(ProgressBar::foregroundColourId, Colours::white);
 
-	/* Specify screen refresh rate */
+    /* Specify screen refresh rate */
     startTimer(20);
 
     /* warnings */
@@ -716,11 +716,11 @@ void PluginEditor::paint (juce::Graphics& g)
 
     }
 
-	g.setColour(Colours::white);
-	g.setFont(juce::FontOptions (11.00f, Font::plain));
-	g.drawText(TRANS("Ver ") + JucePlugin_VersionString + BUILD_VER_SUFFIX + TRANS(", Build Date ") + __DATE__ + TRANS(" "),
-		165, 16, 530, 11,
-		Justification::centredLeft, true);
+    g.setColour(Colours::white);
+    g.setFont(juce::FontOptions (11.00f, Font::plain));
+    g.drawText(TRANS("Ver ") + JucePlugin_VersionString + BUILD_VER_SUFFIX + TRANS(", Build Date ") + __DATE__ + TRANS(" "),
+        165, 16, 530, 11,
+        Justification::centredLeft, true);
 
     /* display warning message */
     g.setFont(juce::FontOptions (11.00f, Font::plain));

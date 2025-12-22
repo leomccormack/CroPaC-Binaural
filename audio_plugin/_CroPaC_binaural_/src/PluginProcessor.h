@@ -44,7 +44,8 @@ class PluginProcessor  : public AudioProcessor,
                          public Timer,
                          private OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
                          public VST2ClientExtensions,
-                         public ParameterManager
+                         public ParameterManager,
+                         public juce::AudioProcessorValueTreeState::Listener
 {
 public:
     /* Get functions */
@@ -88,6 +89,7 @@ public:
     bool getOscPortConnected(){ return osc_connected; }
     
 private:
+    bool firstInit = true;
     void* hCroPaC;                    /* hcropaclib handle */
     std::atomic<int> nNumInputs;      /* current number of input channels */
     std::atomic<int> nNumOutputs;     /* current number of output channels */
