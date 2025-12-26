@@ -27,7 +27,7 @@
 # error "AAX Default Settings Chunk is enabled. This may override parameter defaults."
 #endif
 
-juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
+static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
@@ -153,11 +153,12 @@ void PluginProcessor::setInternalStateUsingParameterValues()
     checkAndUpdateOscStatus();
 }
 
-PluginProcessor::PluginProcessor():
-    AudioProcessor(BusesProperties()
-        .withInput("Input", AudioChannelSet::discreteChannels(4), true)
-        .withOutput("Output", AudioChannelSet::discreteChannels(2), true)),
-    ParameterManager(*this, createParameterLayout())
+PluginProcessor::PluginProcessor()
+    : PluginProcessorBase(
+        BusesProperties()
+            .withInput("Input", AudioChannelSet::discreteChannels(4), true)
+            .withOutput("Output", AudioChannelSet::discreteChannels(2), true),
+        createParameterLayout())
 {
     hcropaclib_create(&hCroPaC);
     addParameterListeners(this);
@@ -170,6 +171,7 @@ PluginProcessor::PluginProcessor():
 
 PluginProcessor::~PluginProcessor()
 {
+    stopTimer();
     if(osc_connected)
         osc.disconnect();
     osc.removeListener(this);
@@ -206,57 +208,6 @@ void PluginProcessor::oscMessageReceived(const OSCMessage& message)
     }
 }
 
-void PluginProcessor::setCurrentProgram (int /*index*/)
-{
-}
-
-const String PluginProcessor::getName() const
-{
-    return JucePlugin_Name;
-}
-
-double PluginProcessor::getTailLengthSeconds() const
-{
-    return 0.0;
-}
-
-int PluginProcessor::getNumPrograms()
-{
-    return 0;
-}
-
-int PluginProcessor::getCurrentProgram()
-{
-    return 0;
-}
-
-const String PluginProcessor::getProgramName (int /*index*/)
-{
-    return String();
-}
-
-bool PluginProcessor::acceptsMidi() const
-{
-   #if JucePlugin_WantsMidiInput
-    return true;
-   #else
-    return false;
-   #endif
-}
-
-bool PluginProcessor::producesMidi() const
-{
-   #if JucePlugin_ProducesMidiOutput
-    return true;
-   #else
-    return false;
-   #endif
-}
-
-void PluginProcessor::changeProgramName (int /*index*/, const String& /*newName*/)
-{
-}
-
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     if(firstInit){
@@ -271,10 +222,6 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     hcropaclib_init(hCroPaC, nSampleRate);
     AudioProcessor::setLatencySamples(hcropaclib_getProcessingDelay());
-}
-
-void PluginProcessor::releaseResources()
-{
 }
 
 void PluginProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
@@ -301,18 +248,11 @@ void PluginProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& /*mid
         buffer.clear();
 }
 
-//==============================================================================
-bool PluginProcessor::hasEditor() const
-{
-    return true; 
-}
-
 AudioProcessorEditor* PluginProcessor::createEditor()
 {
     return new PluginEditor (*this);
 }
 
-//==============================================================================
 void PluginProcessor::getStateInformation (MemoryBlock& destData)
 {
     juce::ValueTree state = parameters.copyState();
@@ -393,7 +333,13 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
             setParameterValuesUsingInternalState();
         }
         else if(xmlState->getIntAttribute("VersionCode")>=0x10405){
+            removeParameterListeners(this);
             parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
+            addParameterListeners(this);
+            
+            /* Many hosts will also trigger parameterChanged() for all parameters after calling setStateInformation() */
+            /* However, some hosts do not. Therefore, it is better to ensure that the internal state is always up-to-date by calling: */
+            setInternalStateUsingParameterValues();
 
             /* Now for the other DSP object parameters (that have no JUCE parameter counterpart) */
             if(xmlState->hasAttribute("UseDefaultHRIRset"))
@@ -409,17 +355,12 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                 osc_port_ID = xmlState->getIntAttribute("OSC_PORT", DEFAULT_OSC_PORT);
                 osc.connect(osc_port_ID);
             }
-            
-            /* Many hosts will also trigger parameterChanged() for all parameters after calling setStateInformation() */
-            /* However, some hosts do not. Therefore, it is better to ensure that the internal state is always up-to-date by calling: */
-            setInternalStateUsingParameterValues();
         }
         
         hcropaclib_refreshParams(hCroPaC);
     }
 }
 
-//==============================================================================
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
