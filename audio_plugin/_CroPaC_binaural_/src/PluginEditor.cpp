@@ -226,22 +226,7 @@ void PluginEditor::paint (juce::Graphics& g)
 {
     using namespace ColoursUI;
 
-    /* Background gradients */
-    drawVerticalGradient(g, {0,  30, 656,124}, bgDark1, bgDark2);
-    drawVerticalGradient(g, {0, 154, 656,124}, bgDark2, bgDark1);
-
-    /* Top rounded bar */
-    {
-        juce::Rectangle<float> r {1.f, 2.f, 654.f, 31.f};
-        g.setGradientFill(juce::ColourGradient(bgDark2,
-                                               r.getX(), r.getBottom(),
-                                               bgDark1,
-                                               r.getRight(), r.getY(),
-                                               false));
-        g.fillRoundedRectangle(r, 5.f);
-        g.setColour(borderGrey);
-        g.drawRoundedRectangle(r, 5.f, 2.f);
-    }
+    drawPluginBackgroundAndBanner(g, getBounds());
 
     /* Panels */
     drawPanel(g, {12, 58,207, 68}, panelFill,      panelStroke);
@@ -252,13 +237,6 @@ void PluginEditor::paint (juce::Graphics& g)
     drawPanel(g, {446,111,196,157}, panelFill,      panelStroke);
     drawPanel(g, {446,160,196,108}, panelFillLight, panelStroke);
     drawPanel(g, {12,163,424,105}, panelFill, panelStroke);
-
-    /* Borders */
-    g.setColour(borderGrey);
-    g.drawRect({0,   0, 656, 2}, 2);
-    g.drawRect({0,   0,   2,278}, 2);
-    g.drawRect({654, 0,   2,278}, 2);
-    g.drawRect({0, 276, 656, 2}, 2);
 
     /* Title */
     drawLabel(g, {16,1,100,32}, "CroPaC|", 18.8f);
