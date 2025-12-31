@@ -239,8 +239,8 @@ void PluginEditor::paint (juce::Graphics& g)
     drawPanel(g, {12,163,424,105}, panelFill, panelStroke);
 
     /* Title */
-    drawLabel(g, {16,1,100,32}, "CroPaC|", 18.8f);
-    drawLabel(g, {86,1,112,32}, "Binaural", 18.f, juce::Justification::centredLeft, juce::Colour(0xffdbed5c));
+    drawLabel(g, {16,1,100,32}, "CroPaC|", 18.f);
+    drawLabel(g, {87,1,112,32}, "Binaural", 18.f, juce::Justification::centredLeft, juce::Colour(0xffdbed5c));
 
     /* Section titles */
     drawLabel(g, {164,32,149,30}, "Decoding Settings", 15.f);

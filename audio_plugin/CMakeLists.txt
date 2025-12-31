@@ -29,6 +29,10 @@ if (BUILD_PLUGIN_FORMAT_STANDALONE)
     message("--  Building Standalone versions")
 endif()
 
+juce_add_binary_data (GUI_fonts SOURCES
+    resources/Fonts/Inter-Bold.ttf
+    resources/Fonts/Inter-Regular.ttf)
+
 # These plug-ins rely on the saf_sofa_reader module being enabled:
 if(SAF_ENABLE_SOFA_READER_MODULE)
     add_subdirectory(_CroPaC_binaural_) 

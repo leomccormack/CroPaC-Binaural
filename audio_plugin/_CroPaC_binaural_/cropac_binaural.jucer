@@ -16,6 +16,12 @@
               defines="JucePlugin_AAXDisableDefaultSettingsChunks=1&#10;&#10;"
               pluginCharacteristicsValue="pluginAAXDisableMultiMono">
   <MAINGROUP id="imnfnp" name="cropac_binaural">
+    <GROUP id="{800E53D6-0DEF-81AA-9742-9490DCF17435}" name="Fonts">
+      <FILE id="j3Fzto" name="Inter-Bold.ttf" compile="0" resource="1" file="../resources/Fonts/Inter-Bold.ttf"/>
+      <FILE id="vtHMNm" name="Inter-Regular.ttf" compile="0" resource="1"
+            file="../resources/Fonts/Inter-Regular.ttf"/>
+      <FILE id="PXcMDa" name="LICENSE.txt" compile="0" resource="1" file="../resources/Fonts/LICENSE.txt"/>
+    </GROUP>
     <FILE id="FtPOKR" name="ParameterManager.h" compile="0" resource="0"
           file="../resources/ParameterManager.h"/>
     <FILE id="rjhBTa" name="PluginProcessorBase.h" compile="0" resource="0"

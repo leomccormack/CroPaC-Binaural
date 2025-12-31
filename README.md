@@ -40,7 +40,7 @@ Note, however, that alternative performance libraries may also be used, with mor
 sudo apt-get install x11proto-xinerama-dev libwebkit2gtk-4.0-dev libgtk-3-dev x11proto-xext-dev libcurl4-openssl-dev libasound2-dev
 ```
 
-## Building the plug-in via CMake 
+## Building the plug-in via CMake (**recommended**)
 
 The plug-in may be built with CMake (version 3.15 or higher):
  ```
@@ -58,7 +58,7 @@ msbuild ALL_BUILD.vcxproj /p:Configuration=Release /m
 ```
 Note: when installing CMake on Windows, make sure to allow the intaller to add CMake to the system PATH list or it won't be found.
 
-## Building the plug-in without CMake
+## Building the plug-in via Projucer (**deprecated**)
 
 You may also manually open the .jucer file with the Projucer App and click "Save Project". This will generate Visual Studio (2015/2017) solution files, Xcode project files, Linux Makefiles (amd64), and Raspberry Pi Linux Makefiles (ARM), which are placed in:
 
